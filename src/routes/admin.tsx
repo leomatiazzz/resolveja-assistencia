@@ -6,7 +6,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
-import { Loader2, LogOut, Wrench, Phone, MapPin, Clock } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Loader2,
+  LogOut,
+  Wrench,
+  Phone,
+  MapPin,
+  Clock,
+  Mail,
+  Briefcase,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
