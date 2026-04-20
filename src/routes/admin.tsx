@@ -47,6 +47,20 @@ type ServiceRequest = {
   created_at: string;
 };
 
+type Professional = {
+  id: string;
+  full_name: string;
+  phone: string;
+  email: string | null;
+  category: string;
+  city: string;
+  neighborhood: string | null;
+  years_experience: number | null;
+  description: string | null;
+  status: string;
+  created_at: string;
+};
+
 function AdminPage() {
   const [session, setSession] = useState<unknown>(null);
   const [isAdmin, setIsAdmin] = useState(false);
