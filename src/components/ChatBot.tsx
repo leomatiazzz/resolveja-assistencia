@@ -8,6 +8,17 @@ import { toast } from "sonner";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
+type Match = {
+  id: string;
+  full_name: string;
+  phone: string;
+  category: string;
+  city: string;
+  neighborhood: string | null;
+  years_experience: number | null;
+  description: string | null;
+};
+
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
 function getSessionId() {
