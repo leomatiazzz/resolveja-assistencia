@@ -70,6 +70,51 @@ export type Database = {
           },
         ]
       }
+      professionals: {
+        Row: {
+          category: string
+          city: string
+          created_at: string
+          description: string | null
+          email: string | null
+          full_name: string
+          id: string
+          neighborhood: string | null
+          phone: string
+          status: string
+          updated_at: string
+          years_experience: number | null
+        }
+        Insert: {
+          category: string
+          city: string
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          full_name: string
+          id?: string
+          neighborhood?: string | null
+          phone: string
+          status?: string
+          updated_at?: string
+          years_experience?: number | null
+        }
+        Update: {
+          category?: string
+          city?: string
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          neighborhood?: string | null
+          phone?: string
+          status?: string
+          updated_at?: string
+          years_experience?: number | null
+        }
+        Relationships: []
+      }
       service_requests: {
         Row: {
           category: string
