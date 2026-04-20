@@ -340,3 +340,36 @@ function MessageBubble({
     </div>
   );
 }
+
+function ProMatchCard({ pro }: { pro: Match }) {
+  return (
+    <div className="rounded-2xl border border-accent/40 bg-accent/10 p-3 text-sm">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1">
+          <div className="font-semibold text-foreground">{pro.full_name}</div>
+          <div className="mt-0.5 text-xs uppercase tracking-wide text-primary">
+            {pro.category.replace(/_/g, " ")}
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            {pro.neighborhood ? `${pro.neighborhood}, ` : ""}
+            {pro.city}
+            {pro.years_experience != null
+              ? ` • ${pro.years_experience} anos exp.`
+              : ""}
+          </div>
+          {pro.description && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              {pro.description}
+            </p>
+          )}
+        </div>
+        <a
+          href={`tel:${pro.phone.replace(/\D/g, "")}`}
+          className="shrink-0 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+        >
+          📞 Ligar
+        </a>
+      </div>
+    </div>
+  );
+}
