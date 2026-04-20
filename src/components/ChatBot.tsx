@@ -50,6 +50,7 @@ export function ChatBot() {
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [requestRegistered, setRequestRegistered] = useState(false);
+  const [matches, setMatches] = useState<Match[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -196,17 +197,25 @@ export function ChatBot() {
       if (toolCallBuffer.name === "register_service_request") {
         try {
           const args = JSON.parse(toolCallBuffer.args || "{}");
-          const { error } = await supabase.functions.invoke("save-request", {
+          const { data: saveData, error } = await supabase.functions.invoke("save-request", {
             body: { ...args, conversation_id: convId },
           });
           if (error) throw error;
           setRequestRegistered(true);
           toast.success("Solicitação registrada!");
+          const found = (saveData?.matches ?? []) as Match[];
+          setMatches(found);
           if (!assistantSoFar.trim()) {
             const confirm =
-              "✅ Pronto! Sua solicitação foi registrada. Vou buscar o profissional ideal e em breve entraremos em contato.";
+              found.length > 0
+                ? `✅ Pronto! Encontrei **${found.length} profissional${found.length > 1 ? "is" : ""}** disponível${found.length > 1 ? "is" : ""} na sua região. Veja abaixo os contatos.`
+                : "✅ Pronto! Sua solicitação foi registrada. Vou buscar o profissional ideal e em breve entraremos em contato.";
             upsertAssistant(confirm);
             await persistMessage(convId, "assistant", confirm);
+          } else if (found.length > 0) {
+            const extra = `\n\n💡 Encontrei **${found.length} profissional${found.length > 1 ? "is" : ""}** disponível${found.length > 1 ? "is" : ""} na sua região — veja abaixo.`;
+            upsertAssistant(extra);
+            await persistMessage(convId, "assistant", assistantSoFar);
           }
         } catch (err) {
           console.error("save-request error:", err);
