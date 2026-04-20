@@ -251,6 +251,13 @@ export function ChatBot() {
         {messages.map((m, i) => (
           <MessageBubble key={i} role={m.role} content={m.content} />
         ))}
+        {matches.length > 0 && (
+          <div className="space-y-2">
+            {matches.map((p) => (
+              <ProMatchCard key={p.id} pro={p} />
+            ))}
+          </div>
+        )}
         {isLoading && messages[messages.length - 1]?.role === "user" && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
