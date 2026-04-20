@@ -29,14 +29,18 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "ResolveJá" },
+      { name: "description", content: "Deu pepino em casa? Algo pifou? Ou está precisando rapidamente reparar uma obra em casa? Contate nosso assistente e agende a visita de um profissional!" },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "ResolveJá" },
+      { property: "og:description", content: "Deu pepino em casa? Algo pifou? Ou está precisando rapidamente reparar uma obra em casa? Contate nosso assistente e agende a visita de um profissional!" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "ResolveJá" },
+      { name: "twitter:description", content: "Deu pepino em casa? Algo pifou? Ou está precisando rapidamente reparar uma obra em casa? Contate nosso assistente e agende a visita de um profissional!" },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/0c814d36-b1ce-4b9a-80f2-76d27ba73451" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/0c814d36-b1ce-4b9a-80f2-76d27ba73451" },
     ],
     links: [
       {
