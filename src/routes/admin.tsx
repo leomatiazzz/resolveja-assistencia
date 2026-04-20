@@ -6,7 +6,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
-import { Loader2, LogOut, Wrench, Phone, MapPin, Clock } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Loader2,
+  LogOut,
+  Wrench,
+  Phone,
+  MapPin,
+  Clock,
+  Mail,
+  Briefcase,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -24,6 +43,20 @@ type ServiceRequest = {
   preferred_time: string | null;
   contact_name: string | null;
   contact_phone: string | null;
+  status: string;
+  created_at: string;
+};
+
+type Professional = {
+  id: string;
+  full_name: string;
+  phone: string;
+  email: string | null;
+  category: string;
+  city: string;
+  neighborhood: string | null;
+  years_experience: number | null;
+  description: string | null;
   status: string;
   created_at: string;
 };
@@ -187,6 +220,52 @@ function NoAccessCard() {
 }
 
 function Dashboard() {
+  return (
+    <div className="min-h-screen bg-[image:var(--gradient-soft)]">
+      <Toaster richColors position="top-center" />
+      <header className="border-b border-border bg-card">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[image:var(--gradient-hero)] text-primary-foreground">
+              <Wrench className="h-5 w-5" />
+            </div>
+            <h1 className="text-base font-bold text-foreground">
+              Painel ResolveJá
+            </h1>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => supabase.auth.signOut()}
+          >
+            <LogOut className="mr-2 h-4 w-4" /> Sair
+          </Button>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-6xl px-5 py-6">
+        <Tabs defaultValue="requests" className="w-full">
+          <TabsList className="mb-4">
+            <TabsTrigger value="requests">
+              <Briefcase className="mr-2 h-4 w-4" /> Solicitações
+            </TabsTrigger>
+            <TabsTrigger value="professionals">
+              <Wrench className="mr-2 h-4 w-4" /> Profissionais
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="requests">
+            <RequestsTab />
+          </TabsContent>
+          <TabsContent value="professionals">
+            <ProfessionalsTab />
+          </TabsContent>
+        </Tabs>
+      </main>
+    </div>
+  );
+}
+
+function RequestsTab() {
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -217,50 +296,250 @@ function Dashboard() {
     }
   }
 
+  if (loading) {
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+  if (requests.length === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
+        <p className="text-sm text-muted-foreground">
+          Nenhuma solicitação ainda. Quando os usuários completarem uma
+          conversa, ela aparecerá aqui.
+        </p>
+      </div>
+    );
+  }
   return (
-    <div className="min-h-screen bg-[image:var(--gradient-soft)]">
-      <Toaster richColors position="top-center" />
-      <header className="border-b border-border bg-card">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[image:var(--gradient-hero)] text-primary-foreground">
-              <Wrench className="h-5 w-5" />
-            </div>
-            <h1 className="text-base font-bold text-foreground">
-              Solicitações
-            </h1>
+    <div className="grid gap-3">
+      {requests.map((r) => (
+        <RequestCard key={r.id} req={r} onStatus={updateStatus} />
+      ))}
+    </div>
+  );
+}
+
+const PRO_CATEGORIES = [
+  "encanador",
+  "eletricista",
+  "pedreiro",
+  "pintor",
+  "montador",
+  "tecnico_eletrodomesticos",
+  "instalador",
+  "diarista",
+  "chaveiro",
+  "servicos_gerais",
+];
+
+function ProfessionalsTab() {
+  const [pros, setPros] = useState<Professional[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [cityFilter, setCityFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function load() {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("professionals")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) toast.error(error.message);
+    setPros((data as Professional[]) ?? []);
+    setLoading(false);
+  }
+
+  async function updateProStatus(id: string, status: string) {
+    const { error } = await supabase
+      .from("professionals")
+      .update({ status })
+      .eq("id", id);
+    if (error) toast.error(error.message);
+    else {
+      toast.success(
+        status === "aprovado"
+          ? "Profissional aprovado"
+          : status === "rejeitado"
+            ? "Profissional rejeitado"
+            : "Atualizado",
+      );
+      load();
+    }
+  }
+
+  const filtered = pros.filter((p) => {
+    if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
+    if (statusFilter !== "all" && p.status !== statusFilter) return false;
+    if (
+      cityFilter.trim() &&
+      !p.city.toLowerCase().includes(cityFilter.trim().toLowerCase())
+    )
+      return false;
+    return true;
+  });
+
+  const cities = Array.from(new Set(pros.map((p) => p.city))).filter(Boolean);
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-3">
+        <div>
+          <Label className="text-xs">Categoria</Label>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as categorias</SelectItem>
+              {PRO_CATEGORIES.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c.replace(/_/g, " ")}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-xs">Cidade</Label>
+          <Input
+            list="city-list"
+            value={cityFilter}
+            onChange={(e) => setCityFilter(e.target.value)}
+            placeholder="Filtrar por cidade..."
+          />
+          <datalist id="city-list">
+            {cities.map((c) => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
+        </div>
+        <div>
+          <Label className="text-xs">Status</Label>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="pendente">Pendentes</SelectItem>
+              <SelectItem value="aprovado">Aprovados</SelectItem>
+              <SelectItem value="rejeitado">Rejeitados</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
+          <p className="text-sm text-muted-foreground">
+            {pros.length === 0
+              ? "Nenhum profissional cadastrado ainda."
+              : "Nenhum profissional com esses filtros."}
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-3">
+          {filtered.map((p) => (
+            <ProfessionalCard key={p.id} pro={p} onStatus={updateProStatus} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProfessionalCard({
+  pro,
+  onStatus,
+}: {
+  pro: Professional;
+  onStatus: (id: string, s: string) => void;
+}) {
+  const statusColor =
+    pro.status === "aprovado"
+      ? "bg-accent text-accent-foreground"
+      : pro.status === "rejeitado"
+        ? "bg-destructive text-destructive-foreground"
+        : "bg-secondary text-secondary-foreground";
+  return (
+    <article className="rounded-2xl border border-border bg-card p-5 shadow-sm transition-[var(--transition-smooth)] hover:shadow-[var(--shadow-elegant)]">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-sm font-semibold text-foreground">
+              {pro.full_name}
+            </h3>
+            <span className="rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold uppercase text-primary-foreground">
+              {pro.category.replace(/_/g, " ")}
+            </span>
+            <span
+              className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusColor}`}
+            >
+              {pro.status}
+            </span>
           </div>
+          <div className="mt-3 grid gap-1.5 text-xs text-muted-foreground sm:grid-cols-2">
+            <div className="flex items-center gap-1.5">
+              <Phone className="h-3 w-3" />
+              {pro.phone}
+            </div>
+            {pro.email && (
+              <div className="flex items-center gap-1.5">
+                <Mail className="h-3 w-3" />
+                {pro.email}
+              </div>
+            )}
+            <div className="flex items-center gap-1.5">
+              <MapPin className="h-3 w-3" />
+              {pro.neighborhood ? `${pro.neighborhood}, ` : ""}
+              {pro.city}
+            </div>
+            {pro.years_experience != null && (
+              <div className="flex items-center gap-1.5">
+                <Clock className="h-3 w-3" />
+                {pro.years_experience} anos de experiência
+              </div>
+            )}
+          </div>
+          {pro.description && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              {pro.description}
+            </p>
+          )}
+        </div>
+        <div className="flex flex-col gap-1.5">
           <Button
-            variant="outline"
             size="sm"
-            onClick={() => supabase.auth.signOut()}
+            variant={pro.status === "aprovado" ? "default" : "outline"}
+            onClick={() => onStatus(pro.id, "aprovado")}
           >
-            <LogOut className="mr-2 h-4 w-4" /> Sair
+            <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Aprovar
+          </Button>
+          <Button
+            size="sm"
+            variant={pro.status === "rejeitado" ? "destructive" : "outline"}
+            onClick={() => onStatus(pro.id, "rejeitado")}
+          >
+            <XCircle className="mr-1.5 h-3.5 w-3.5" /> Rejeitar
           </Button>
         </div>
-      </header>
-
-      <main className="mx-auto max-w-6xl px-5 py-6">
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          </div>
-        ) : requests.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
-            <p className="text-sm text-muted-foreground">
-              Nenhuma solicitação ainda. Quando os usuários completarem uma
-              conversa, ela aparecerá aqui.
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-3">
-            {requests.map((r) => (
-              <RequestCard key={r.id} req={r} onStatus={updateStatus} />
-            ))}
-          </div>
-        )}
-      </main>
-    </div>
+      </div>
+      <div className="mt-3 text-[10px] text-muted-foreground">
+        Cadastrado em {new Date(pro.created_at).toLocaleString("pt-BR")}
+      </div>
+    </article>
   );
 }
 

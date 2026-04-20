@@ -8,6 +8,17 @@ import { toast } from "sonner";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
+type Match = {
+  id: string;
+  full_name: string;
+  phone: string;
+  category: string;
+  city: string;
+  neighborhood: string | null;
+  years_experience: number | null;
+  description: string | null;
+};
+
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
 function getSessionId() {
@@ -39,6 +50,7 @@ export function ChatBot() {
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [requestRegistered, setRequestRegistered] = useState(false);
+  const [matches, setMatches] = useState<Match[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -185,17 +197,25 @@ export function ChatBot() {
       if (toolCallBuffer.name === "register_service_request") {
         try {
           const args = JSON.parse(toolCallBuffer.args || "{}");
-          const { error } = await supabase.functions.invoke("save-request", {
+          const { data: saveData, error } = await supabase.functions.invoke("save-request", {
             body: { ...args, conversation_id: convId },
           });
           if (error) throw error;
           setRequestRegistered(true);
           toast.success("Solicitação registrada!");
+          const found = (saveData?.matches ?? []) as Match[];
+          setMatches(found);
           if (!assistantSoFar.trim()) {
             const confirm =
-              "✅ Pronto! Sua solicitação foi registrada. Vou buscar o profissional ideal e em breve entraremos em contato.";
+              found.length > 0
+                ? `✅ Pronto! Encontrei **${found.length} profissional${found.length > 1 ? "is" : ""}** disponível${found.length > 1 ? "is" : ""} na sua região. Veja abaixo os contatos.`
+                : "✅ Pronto! Sua solicitação foi registrada. Vou buscar o profissional ideal e em breve entraremos em contato.";
             upsertAssistant(confirm);
             await persistMessage(convId, "assistant", confirm);
+          } else if (found.length > 0) {
+            const extra = `\n\n💡 Encontrei **${found.length} profissional${found.length > 1 ? "is" : ""}** disponível${found.length > 1 ? "is" : ""} na sua região — veja abaixo.`;
+            upsertAssistant(extra);
+            await persistMessage(convId, "assistant", assistantSoFar);
           }
         } catch (err) {
           console.error("save-request error:", err);
@@ -231,6 +251,13 @@ export function ChatBot() {
         {messages.map((m, i) => (
           <MessageBubble key={i} role={m.role} content={m.content} />
         ))}
+        {matches.length > 0 && (
+          <div className="space-y-2">
+            {matches.map((p) => (
+              <ProMatchCard key={p.id} pro={p} />
+            ))}
+          </div>
+        )}
         {isLoading && messages[messages.length - 1]?.role === "user" && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -309,6 +336,39 @@ function MessageBubble({
             <ReactMarkdown>{content}</ReactMarkdown>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function ProMatchCard({ pro }: { pro: Match }) {
+  return (
+    <div className="rounded-2xl border border-accent/40 bg-accent/10 p-3 text-sm">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1">
+          <div className="font-semibold text-foreground">{pro.full_name}</div>
+          <div className="mt-0.5 text-xs uppercase tracking-wide text-primary">
+            {pro.category.replace(/_/g, " ")}
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            {pro.neighborhood ? `${pro.neighborhood}, ` : ""}
+            {pro.city}
+            {pro.years_experience != null
+              ? ` • ${pro.years_experience} anos exp.`
+              : ""}
+          </div>
+          {pro.description && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              {pro.description}
+            </p>
+          )}
+        </div>
+        <a
+          href={`tel:${pro.phone.replace(/\D/g, "")}`}
+          className="shrink-0 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+        >
+          📞 Ligar
+        </a>
       </div>
     </div>
   );
