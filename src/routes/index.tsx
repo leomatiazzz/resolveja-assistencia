@@ -36,12 +36,20 @@ function Index() {
             Resolve<span className="text-primary-glow">Já</span>
           </span>
         </div>
-        <Link
-          to="/admin"
-          className="text-xs font-medium text-muted-foreground hover:text-foreground"
-        >
-          Painel admin
-        </Link>
+        <nav className="flex items-center gap-4">
+          <Link
+            to="/cadastro-profissional"
+            className="text-xs font-medium text-foreground hover:text-primary"
+          >
+            Sou profissional
+          </Link>
+          <Link
+            to="/admin"
+            className="text-xs font-medium text-muted-foreground hover:text-foreground"
+          >
+            Painel admin
+          </Link>
+        </nav>
       </header>
 
       <main className="mx-auto grid max-w-6xl gap-10 px-5 pb-12 lg:grid-cols-2 lg:items-center lg:gap-8 lg:py-8">
