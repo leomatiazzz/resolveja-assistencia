@@ -21,6 +21,46 @@ type Match = {
 };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
+const DRAFT_KEY = "resolveja_chat_draft";
+
+type Draft = {
+  messages: Msg[];
+  conversationId: string | null;
+  savedAt: number;
+};
+
+function saveDraft(messages: Msg[], conversationId: string | null) {
+  try {
+    const draft: Draft = { messages, conversationId, savedAt: Date.now() };
+    sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  } catch {
+    /* ignore */
+  }
+}
+
+function loadDraft(): Draft | null {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const d = JSON.parse(raw) as Draft;
+    // expire after 30 minutes
+    if (Date.now() - d.savedAt > 30 * 60 * 1000) {
+      sessionStorage.removeItem(DRAFT_KEY);
+      return null;
+    }
+    return d;
+  } catch {
+    return null;
+  }
+}
+
+function clearDraft() {
+  try {
+    sessionStorage.removeItem(DRAFT_KEY);
+  } catch {
+    /* ignore */
+  }
+}
 
 function getSessionId() {
   const k = "resolveja_session";
@@ -71,6 +111,19 @@ export function ChatBot() {
         .eq("user_id", uid)
         .maybeSingle();
       setUserProfile(data ?? { full_name: null, phone: null });
+
+      // After login, restore any draft conversation saved before redirect
+      const draft = loadDraft();
+      if (draft && draft.messages.length > 1) {
+        setMessages(draft.messages);
+        setConversationId(draft.conversationId);
+        const resumeMsg: Msg = {
+          role: "assistant",
+          content: `✅ Bem-vindo${data?.full_name ? `, **${data.full_name.split(" ")[0]}**` : ""}! Você está logado. Vamos continuar de onde paramos? É só me confirmar para eu finalizar sua solicitação.`,
+        };
+        setMessages((prev) => [...prev, resumeMsg]);
+        clearDraft();
+      }
     };
     supabase.auth.getSession().then(({ data: { session } }) => {
       loadProfile(session?.user?.id ?? null);
