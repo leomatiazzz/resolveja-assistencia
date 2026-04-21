@@ -113,6 +113,26 @@ function LoginCard() {
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [loading, setLoading] = useState(false);
+  const [resetMode, setResetMode] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+
+  async function handleReset(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email) {
+      toast.error("Digite seu email para receber o link de recuperação.");
+      return;
+    }
+    setResetLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) toast.error(error.message);
+    else
+      toast.success(
+        "Email enviado! Verifique sua caixa de entrada para redefinir a senha.",
+      );
+    setResetLoading(false);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -162,6 +182,37 @@ function LoginCard() {
           </div>
           <h1 className="text-lg font-bold text-foreground">Painel ResolveJá</h1>
         </div>
+        {resetMode ? (
+          <form onSubmit={handleReset} className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              Informe seu email e enviaremos um link para redefinir a senha.
+            </p>
+            <div>
+              <Label htmlFor="reset-email">Email</Label>
+              <Input
+                id="reset-email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={resetLoading}>
+              {resetLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Enviar link de recuperação"
+              )}
+            </Button>
+            <button
+              type="button"
+              onClick={() => setResetMode(false)}
+              className="w-full text-center text-xs text-muted-foreground hover:text-foreground"
+            >
+              ← Voltar ao login
+            </button>
+          </form>
+        ) : (
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <Label htmlFor="email">Email</Label>
@@ -198,15 +249,27 @@ function LoginCard() {
               "Criar conta"
             )}
           </Button>
+          {mode === "signin" && (
+            <button
+              type="button"
+              onClick={() => setResetMode(true)}
+              className="w-full text-center text-xs text-primary hover:underline"
+            >
+              Esqueci minha senha
+            </button>
+          )}
         </form>
-        <button
-          onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-          className="mt-3 w-full text-center text-xs text-muted-foreground hover:text-foreground"
-        >
-          {mode === "signin"
-            ? "Não tem conta? Criar uma"
-            : "Já tem conta? Entrar"}
-        </button>
+        )}
+        {!resetMode && (
+          <button
+            onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+            className="mt-3 w-full text-center text-xs text-muted-foreground hover:text-foreground"
+          >
+            {mode === "signin"
+              ? "Não tem conta? Criar uma"
+              : "Já tem conta? Entrar"}
+          </button>
+        )}
         <Link
           to="/"
           className="mt-4 block text-center text-xs text-muted-foreground hover:text-foreground"
