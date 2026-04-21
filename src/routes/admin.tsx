@@ -338,12 +338,18 @@ function Dashboard() {
             <TabsTrigger value="professionals">
               <Wrench className="mr-2 h-4 w-4" /> Profissionais
             </TabsTrigger>
+            <TabsTrigger value="notifications">
+              <Bell className="mr-2 h-4 w-4" /> Notificações
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="requests">
             <RequestsTab />
           </TabsContent>
           <TabsContent value="professionals">
             <ProfessionalsTab />
+          </TabsContent>
+          <TabsContent value="notifications">
+            <NotificationsTab />
           </TabsContent>
         </Tabs>
       </main>
