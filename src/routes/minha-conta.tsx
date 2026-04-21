@@ -262,6 +262,70 @@ function RequestRow({
             </div>
           </div>
 
+          <div className="mt-3 rounded-lg border border-accent/40 bg-accent/10 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
+                <StickyNote className="h-3.5 w-3.5" /> Notas para o profissional
+              </div>
+              {!editingNotes && req.status !== "concluido" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNotesDraft(req.notes_for_professional ?? "");
+                    setEditingNotes(true);
+                  }}
+                  className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs text-muted-foreground hover:bg-background hover:text-foreground"
+                >
+                  <Pencil className="h-3 w-3" />
+                  {req.notes_for_professional ? "Editar" : "Adicionar"}
+                </button>
+              )}
+            </div>
+            {editingNotes ? (
+              <div className="mt-2 space-y-2">
+                <Textarea
+                  value={notesDraft}
+                  onChange={(e) => setNotesDraft(e.target.value.slice(0, 500))}
+                  placeholder="Ex: portão azul, tocar interfone 12. Cuidado com o cachorro no quintal."
+                  rows={3}
+                  className="text-sm"
+                />
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{notesDraft.length}/500</span>
+                  <div className="flex gap-1.5">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setEditingNotes(false);
+                        setNotesDraft(req.notes_for_professional ?? "");
+                      }}
+                      disabled={savingNotes}
+                    >
+                      <X className="mr-1 h-3.5 w-3.5" /> Cancelar
+                    </Button>
+                    <Button size="sm" onClick={saveNotes} disabled={savingNotes}>
+                      {savingNotes ? (
+                        <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Check className="mr-1 h-3.5 w-3.5" />
+                      )}
+                      Salvar
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="mt-1.5 text-sm text-foreground">
+                {req.notes_for_professional || (
+                  <span className="text-muted-foreground italic">
+                    Nenhuma observação adicionada. Use este espaço para avisos como acesso, animais, melhor entrada.
+                  </span>
+                )}
+              </p>
+            )}
+          </div>
+
           {pro && (
             <div className="mt-3 rounded-xl border border-accent/40 bg-accent/10 p-3">
               <div className="text-xs font-semibold uppercase text-primary">Profissional designado</div>
