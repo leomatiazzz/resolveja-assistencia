@@ -480,6 +480,27 @@ const PRO_CATEGORIES = [
   "servicos_gerais",
 ];
 
+const CATEGORY_LABELS: Record<string, string> = {
+  encanador: "Encanador",
+  eletricista: "Eletricista",
+  pedreiro: "Pedreiro",
+  pintor: "Pintor",
+  montador: "Montador de móveis",
+  tecnico_eletrodomesticos: "Técnico em eletrodomésticos",
+  instalador: "Instalador",
+  instalacao: "Instalação",
+  diarista: "Diarista",
+  chaveiro: "Chaveiro",
+  servicos_gerais: "Serviços gerais",
+  limpeza: "Limpeza",
+};
+
+function categoryLabel(key: string) {
+  if (CATEGORY_LABELS[key]) return CATEGORY_LABELS[key];
+  const words = key.replace(/_/g, " ");
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
 function ProfessionalsTab() {
   const [pros, setPros] = useState<Professional[]>([]);
   const [loading, setLoading] = useState(true);
