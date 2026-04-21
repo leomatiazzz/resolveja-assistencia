@@ -115,8 +115,116 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ratings: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          professional_id: string
+          service_request_id: string
+          stars: number
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          professional_id: string
+          service_request_id: string
+          stars: number
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          professional_id?: string
+          service_request_id?: string
+          stars?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ratings_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ratings_service_request_id_fkey"
+            columns: ["service_request_id"]
+            isOneToOne: true
+            referencedRelation: "service_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      request_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          sender_role: string
+          sender_user_id: string | null
+          service_request_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          sender_role: string
+          sender_user_id?: string | null
+          service_request_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          sender_role?: string
+          sender_user_id?: string | null
+          service_request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_messages_service_request_id_fkey"
+            columns: ["service_request_id"]
+            isOneToOne: false
+            referencedRelation: "service_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_requests: {
         Row: {
+          assigned_professional_id: string | null
           category: string
           contact_name: string | null
           contact_phone: string | null
@@ -129,8 +237,10 @@ export type Database = {
           status: string
           updated_at: string
           urgency: string | null
+          user_id: string | null
         }
         Insert: {
+          assigned_professional_id?: string | null
           category: string
           contact_name?: string | null
           contact_phone?: string | null
@@ -143,8 +253,10 @@ export type Database = {
           status?: string
           updated_at?: string
           urgency?: string | null
+          user_id?: string | null
         }
         Update: {
+          assigned_professional_id?: string | null
           category?: string
           contact_name?: string | null
           contact_phone?: string | null
@@ -157,8 +269,16 @@ export type Database = {
           status?: string
           updated_at?: string
           urgency?: string | null
+          user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "service_requests_assigned_professional_id_fkey"
+            columns: ["assigned_professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "service_requests_conversation_id_fkey"
             columns: ["conversation_id"]

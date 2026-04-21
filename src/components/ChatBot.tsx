@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { Send, Loader2, Wrench, CheckCircle2 } from "lucide-react";
+import { Send, Loader2, Wrench, CheckCircle2, Phone, UserCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { Link } from "@tanstack/react-router";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -51,7 +52,20 @@ export function ChatBot() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [requestRegistered, setRequestRegistered] = useState(false);
   const [matches, setMatches] = useState<Match[]>([]);
+  const [requestId, setRequestId] = useState<string | null>(null);
+  const [chosenProId, setChosenProId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUserId(session?.user?.id ?? null);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+      setUserId(s?.user?.id ?? null);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -198,10 +212,11 @@ export function ChatBot() {
         try {
           const args = JSON.parse(toolCallBuffer.args || "{}");
           const { data: saveData, error } = await supabase.functions.invoke("save-request", {
-            body: { ...args, conversation_id: convId },
+            body: { ...args, conversation_id: convId, user_id: userId },
           });
           if (error) throw error;
           setRequestRegistered(true);
+          if (saveData?.id) setRequestId(saveData.id);
           toast.success("Solicitação registrada!");
           const found = (saveData?.matches ?? []) as Match[];
           setMatches(found);
@@ -254,8 +269,47 @@ export function ChatBot() {
         {matches.length > 0 && (
           <div className="space-y-2">
             {matches.map((p) => (
-              <ProMatchCard key={p.id} pro={p} />
+              <ProMatchCard
+                key={p.id}
+                pro={p}
+                chosen={chosenProId === p.id}
+                canChoose={!!userId && !!requestId && !chosenProId}
+                onChoose={async () => {
+                  if (!requestId) return;
+                  const { error } = await supabase
+                    .from("service_requests")
+                    .update({ assigned_professional_id: p.id, status: "em_andamento" })
+                    .eq("id", requestId);
+                  if (error) {
+                    toast.error(error.message);
+                    return;
+                  }
+                  setChosenProId(p.id);
+                  toast.success(`${p.full_name} foi designado ao seu chamado!`);
+                }}
+              />
             ))}
+            {requestRegistered && !userId && (
+              <div className="rounded-2xl border border-primary/30 bg-primary/5 p-3 text-center text-xs">
+                <p className="text-foreground">
+                  💡 <strong>Crie uma conta</strong> para escolher um profissional, acompanhar o status e conversar pelo painel.
+                </p>
+                <Link
+                  to="/login"
+                  className="mt-2 inline-block rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+                >
+                  Criar conta / Entrar
+                </Link>
+              </div>
+            )}
+            {chosenProId && (
+              <div className="rounded-2xl border border-accent/40 bg-accent/10 p-3 text-center text-xs text-foreground">
+                ✅ Profissional designado. Acompanhe o chamado em{" "}
+                <Link to="/minha-conta" className="font-semibold text-primary hover:underline">
+                  Minha conta
+                </Link>.
+              </div>
+            )}
           </div>
         )}
         {isLoading && messages[messages.length - 1]?.role === "user" && (
@@ -341,9 +395,23 @@ function MessageBubble({
   );
 }
 
-function ProMatchCard({ pro }: { pro: Match }) {
+function ProMatchCard({
+  pro,
+  chosen,
+  canChoose,
+  onChoose,
+}: {
+  pro: Match;
+  chosen: boolean;
+  canChoose: boolean;
+  onChoose: () => void;
+}) {
   return (
-    <div className="rounded-2xl border border-accent/40 bg-accent/10 p-3 text-sm">
+    <div
+      className={`rounded-2xl border p-3 text-sm ${
+        chosen ? "border-primary bg-primary/5" : "border-accent/40 bg-accent/10"
+      }`}
+    >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1">
           <div className="font-semibold text-foreground">{pro.full_name}</div>
@@ -363,12 +431,27 @@ function ProMatchCard({ pro }: { pro: Match }) {
             </p>
           )}
         </div>
-        <a
-          href={`tel:${pro.phone.replace(/\D/g, "")}`}
-          className="shrink-0 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
-        >
-          📞 Ligar
-        </a>
+        <div className="flex shrink-0 flex-col gap-1.5">
+          <a
+            href={`tel:${pro.phone.replace(/\D/g, "")}`}
+            className="rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+          >
+            <Phone className="mr-1 inline h-3 w-3" /> Ligar
+          </a>
+          {canChoose && (
+            <button
+              onClick={onChoose}
+              className="rounded-full border border-primary bg-card px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary hover:text-primary-foreground"
+            >
+              <UserCheck className="mr-1 inline h-3 w-3" /> Escolher
+            </button>
+          )}
+          {chosen && (
+            <span className="rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">
+              ✓ Escolhido
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

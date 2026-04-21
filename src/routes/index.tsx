@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { ChatBot } from "@/components/ChatBot";
 import { Toaster } from "@/components/ui/sonner";
-import { Wrench, Zap, Hammer, Paintbrush, Sparkles } from "lucide-react";
+import { Wrench, Zap, Hammer, Paintbrush, Sparkles, UserCircle } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -24,6 +26,12 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const [authed, setAuthed] = useState(false);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => setAuthed(!!session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setAuthed(!!s));
+    return () => sub.subscription.unsubscribe();
+  }, []);
   return (
     <div className="min-h-screen bg-[image:var(--gradient-soft)]">
       <Toaster richColors position="top-center" />
@@ -37,6 +45,21 @@ function Index() {
           </span>
         </div>
         <nav className="flex items-center gap-4">
+          {authed ? (
+            <Link
+              to="/minha-conta"
+              className="inline-flex items-center gap-1 text-xs font-medium text-foreground hover:text-primary"
+            >
+              <UserCircle className="h-4 w-4" /> Minha conta
+            </Link>
+          ) : (
+            <Link
+              to="/login"
+              className="text-xs font-medium text-foreground hover:text-primary"
+            >
+              Entrar
+            </Link>
+          )}
           <Link
             to="/cadastro-profissional"
             className="text-xs font-medium text-foreground hover:text-primary"
