@@ -46,9 +46,9 @@ const CATEGORIES = [
   { value: "pedreiro", label: "Pedreiro" },
   { value: "pintor", label: "Pintor" },
   { value: "montador", label: "Montador de móveis" },
-  { value: "tecnico_eletrodomesticos", label: "Técnico de eletrodomésticos" },
+  { value: "tecnico_eletrodomesticos", label: "Técnico em eletrodomésticos" },
   { value: "instalador", label: "Instalador (TV, ar, chuveiro)" },
-  { value: "diarista", label: "Diarista / limpeza" },
+  { value: "diarista", label: "Diarista / Limpeza" },
   { value: "chaveiro", label: "Chaveiro" },
   { value: "servicos_gerais", label: "Serviços gerais" },
 ];

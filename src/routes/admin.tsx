@@ -480,6 +480,27 @@ const PRO_CATEGORIES = [
   "servicos_gerais",
 ];
 
+const CATEGORY_LABELS: Record<string, string> = {
+  encanador: "Encanador",
+  eletricista: "Eletricista",
+  pedreiro: "Pedreiro",
+  pintor: "Pintor",
+  montador: "Montador de móveis",
+  tecnico_eletrodomesticos: "Técnico em eletrodomésticos",
+  instalador: "Instalador",
+  instalacao: "Instalação",
+  diarista: "Diarista",
+  chaveiro: "Chaveiro",
+  servicos_gerais: "Serviços gerais",
+  limpeza: "Limpeza",
+};
+
+function categoryLabel(key: string) {
+  if (CATEGORY_LABELS[key]) return CATEGORY_LABELS[key];
+  const words = key.replace(/_/g, " ");
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
 function ProfessionalsTab() {
   const [pros, setPros] = useState<Professional[]>([]);
   const [loading, setLoading] = useState(true);
@@ -546,7 +567,7 @@ function ProfessionalsTab() {
               <SelectItem value="all">Todas as categorias</SelectItem>
               {PRO_CATEGORIES.map((c) => (
                 <SelectItem key={c} value={c}>
-                  {c.replace(/_/g, " ")}
+                  {categoryLabel(c)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -626,8 +647,8 @@ function ProfessionalCard({
             <h3 className="text-sm font-semibold text-foreground">
               {pro.full_name}
             </h3>
-            <span className="rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold uppercase text-primary-foreground">
-              {pro.category.replace(/_/g, " ")}
+            <span className="rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold text-primary-foreground">
+              {categoryLabel(pro.category)}
             </span>
             <span
               className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusColor}`}
@@ -701,8 +722,8 @@ function RequestCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold uppercase text-primary-foreground">
-              {req.category.replace(/_/g, " ")}
+            <span className="rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold text-primary-foreground">
+              {categoryLabel(req.category)}
             </span>
             {urgent && (
               <span className="rounded-full bg-destructive px-2.5 py-0.5 text-xs font-semibold text-destructive-foreground">
