@@ -180,6 +180,9 @@ function RequestRow({
 }) {
   const [showChat, setShowChat] = useState(false);
   const [showRating, setShowRating] = useState(false);
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [notesDraft, setNotesDraft] = useState(req.notes_for_professional ?? "");
+  const [savingNotes, setSavingNotes] = useState(false);
 
   const statusLabel: Record<string, string> = {
     novo: "Novo",
@@ -202,6 +205,23 @@ function RequestRow({
       toast.success("Chamado concluído!");
       onChange();
     }
+  }
+
+  async function saveNotes() {
+    const value = notesDraft.trim().slice(0, 500);
+    setSavingNotes(true);
+    const { error } = await supabase
+      .from("service_requests")
+      .update({ notes_for_professional: value || null })
+      .eq("id", req.id);
+    setSavingNotes(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Notas atualizadas");
+    setEditingNotes(false);
+    onChange();
   }
 
   return (
