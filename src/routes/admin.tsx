@@ -714,3 +714,131 @@ function RequestCard({
     </article>
   );
 }
+
+type NotificationRow = {
+  id: string;
+  professional_id: string;
+  service_request_id: string | null;
+  type: string;
+  title: string;
+  message: string;
+  read: boolean;
+  created_at: string;
+};
+
+function NotificationsTab() {
+  const [items, setItems] = useState<NotificationRow[]>([]);
+  const [pros, setPros] = useState<Record<string, { full_name: string; phone: string; email: string | null }>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function load() {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("notifications")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) toast.error(error.message);
+    const list = (data as NotificationRow[]) ?? [];
+    setItems(list);
+    const proIds = Array.from(new Set(list.map((n) => n.professional_id)));
+    if (proIds.length > 0) {
+      const { data: prosData } = await supabase
+        .from("professionals")
+        .select("id, full_name, phone, email")
+        .in("id", proIds);
+      const map: Record<string, { full_name: string; phone: string; email: string | null }> = {};
+      (prosData ?? []).forEach((p) => {
+        map[p.id] = { full_name: p.full_name, phone: p.phone, email: p.email };
+      });
+      setPros(map);
+    }
+    setLoading(false);
+  }
+
+  async function toggleRead(id: string, read: boolean) {
+    const { error } = await supabase.from("notifications").update({ read }).eq("id", id);
+    if (error) toast.error(error.message);
+    else load();
+  }
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+  if (items.length === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
+        <p className="text-sm text-muted-foreground">
+          Nenhuma notificação ainda. Quando um cliente escolher um profissional no chat, ela aparecerá aqui.
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="grid gap-3">
+      {items.map((n) => {
+        const pro = pros[n.professional_id];
+        return (
+          <article
+            key={n.id}
+            className={`rounded-2xl border p-4 shadow-sm ${
+              n.read ? "border-border bg-card" : "border-primary/40 bg-primary/5"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <Bell className={`h-4 w-4 ${n.read ? "text-muted-foreground" : "text-primary"}`} />
+                  <h3 className="font-semibold text-foreground">{n.title}</h3>
+                  {!n.read && (
+                    <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                      Nova
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">{n.message}</p>
+                {pro && (
+                  <div className="mt-3 rounded-lg border border-border bg-background p-2 text-xs">
+                    <div className="font-semibold text-foreground">→ {pro.full_name}</div>
+                    <div className="mt-1 flex flex-wrap gap-3 text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Phone className="h-3 w-3" /> {pro.phone}
+                      </span>
+                      {pro.email && (
+                        <span className="flex items-center gap-1">
+                          <Mail className="h-3 w-3" /> {pro.email}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {n.service_request_id && (
+                  <div className="mt-2 text-[10px] text-muted-foreground">
+                    Chamado: <code className="font-mono">{n.service_request_id.slice(0, 8)}</code>
+                  </div>
+                )}
+              </div>
+              <Button
+                size="sm"
+                variant={n.read ? "outline" : "default"}
+                onClick={() => toggleRead(n.id, !n.read)}
+              >
+                {n.read ? "Marcar não lida" : "Marcar lida"}
+              </Button>
+            </div>
+            <div className="mt-3 text-[10px] text-muted-foreground">
+              {new Date(n.created_at).toLocaleString("pt-BR")}
+            </div>
+          </article>
+        );
+      })}
+    </div>
+  );
+}
