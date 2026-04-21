@@ -46,6 +46,7 @@ type ServiceRequest = {
   contact_phone: string | null;
   status: string;
   created_at: string;
+  assigned_professional_id: string | null;
 };
 
 type Professional = {
