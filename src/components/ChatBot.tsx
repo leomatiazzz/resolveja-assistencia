@@ -360,8 +360,22 @@ export function ChatBot() {
           e.preventDefault();
           handleSend();
         }}
-        className="flex items-center gap-2 border-t border-border bg-background px-3 py-3"
+        className="flex flex-col gap-2 border-t border-border bg-background px-3 py-3"
       >
+        {!userId && messages.length > 2 && !requestRegistered && (
+          <div className="flex items-center justify-between gap-2 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
+            <span className="text-foreground">
+              💡 Tem conta? Faça login para acompanhar seu chamado.
+            </span>
+            <Link
+              to="/login"
+              className="shrink-0 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+            >
+              Criar conta / Entrar
+            </Link>
+          </div>
+        )}
+        <div className="flex items-center gap-2">
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -382,6 +396,7 @@ export function ChatBot() {
             <Send className="h-4 w-4" />
           )}
         </Button>
+        </div>
       </form>
     </div>
   );
