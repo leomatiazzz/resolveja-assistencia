@@ -250,6 +250,7 @@ export function ChatBot() {
             logged_in: !!userId,
             full_name: userProfile?.full_name ?? null,
             phone: userProfile?.phone ?? null,
+            default_address: defaultAddress ? formatAddress(defaultAddress) : null,
           },
         }),
       });
