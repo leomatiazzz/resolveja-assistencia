@@ -46,6 +46,7 @@ type ServiceRequest = {
   contact_phone: string | null;
   status: string;
   created_at: string;
+  assigned_professional_id: string | null;
 };
 
 type Professional = {
@@ -412,11 +413,32 @@ function RequestsTab() {
       .from("service_requests")
       .update({ status })
       .eq("id", id);
-    if (error) toast.error(error.message);
-    else {
-      toast.success("Atualizado");
-      load();
+    if (error) {
+      toast.error(error.message);
+      return;
     }
+
+    // Notificar profissional ao concluir/cancelar
+    if (status === "concluido" || status === "cancelado") {
+      const req = requests.find((r) => r.id === id);
+      if (req?.assigned_professional_id) {
+        const isDone = status === "concluido";
+        await supabase.from("notifications").insert({
+          professional_id: req.assigned_professional_id,
+          service_request_id: id,
+          type: isDone ? "request_completed" : "request_cancelled",
+          title: isDone
+            ? "Serviço marcado como concluído"
+            : "Serviço cancelado",
+          message: isDone
+            ? `A solicitação de ${req.category} (${req.contact_name ?? "cliente"}) foi marcada como concluída pelo admin.`
+            : `A solicitação de ${req.category} (${req.contact_name ?? "cliente"}) foi cancelada pelo admin.`,
+        });
+      }
+    }
+
+    toast.success("Atualizado");
+    load();
   }
 
   if (loading) {
