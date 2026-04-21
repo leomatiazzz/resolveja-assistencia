@@ -460,6 +460,42 @@ export function ChatBot() {
             )}
           </div>
         )}
+        {requestRegistered && offerSaveAddress && collectedLocation && (
+          <div className="rounded-2xl border border-primary/30 bg-primary/5 p-3 text-xs">
+            <div className="flex items-start gap-2">
+              <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+              <div className="flex-1">
+                <p className="font-semibold text-foreground">
+                  Salvar este endereço para próximas vezes?
+                </p>
+                <p className="mt-0.5 text-muted-foreground">
+                  &ldquo;{collectedLocation}&rdquo;
+                </p>
+                <p className="mt-1 text-muted-foreground">
+                  Cadastre o endereço completo na sua conta — assim o assistente
+                  já sabe onde o serviço será feito e o foco da conversa fica
+                  nos detalhes do problema.
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Link
+                    to="/minha-conta"
+                    className="inline-block rounded-full bg-primary px-3 py-1.5 font-semibold text-primary-foreground hover:bg-primary/90"
+                  >
+                    Cadastrar endereço
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setOfferSaveAddress(false)}
+                    className="rounded-full border border-border bg-card px-3 py-1.5 font-medium text-foreground hover:bg-secondary"
+                    disabled={savingAddress}
+                  >
+                    Agora não
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         {isLoading && messages[messages.length - 1]?.role === "user" && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
