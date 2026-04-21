@@ -222,7 +222,18 @@ function RequestRow({
           <p className="mt-2 text-sm font-medium text-foreground">{req.problem_description}</p>
           <div className="mt-2 grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">
             {req.location && (
-              <div className="flex items-center gap-1.5"><MapPin className="h-3 w-3" /> {req.location}</div>
+              <div className="flex items-center gap-1.5">
+                <MapPin className="h-3 w-3" />
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(req.location)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline-offset-2 hover:underline"
+                  title="Abrir no Google Maps"
+                >
+                  {req.location}
+                </a>
+              </div>
             )}
             <div className="flex items-center gap-1.5">
               <Clock className="h-3 w-3" /> {new Date(req.created_at).toLocaleString("pt-BR")}
