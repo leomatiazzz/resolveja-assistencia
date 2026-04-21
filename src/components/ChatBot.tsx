@@ -355,9 +355,11 @@ export function ChatBot() {
       </header>
 
       <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-5">
-        {messages.map((m, i) => (
-          <MessageBubble key={i} role={m.role} content={m.content} />
-        ))}
+        {messages
+          .filter((m) => m.content !== AUTO_FINALIZE_TRIGGER)
+          .map((m, i) => (
+            <MessageBubble key={i} role={m.role} content={m.content} />
+          ))}
         {matches.length > 0 && (
           <div className="space-y-2">
             {matches.map((p) => (
