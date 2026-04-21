@@ -567,7 +567,7 @@ function ProfessionalsTab() {
               <SelectItem value="all">Todas as categorias</SelectItem>
               {PRO_CATEGORIES.map((c) => (
                 <SelectItem key={c} value={c}>
-                  {c.replace(/_/g, " ")}
+                  {categoryLabel(c)}
                 </SelectItem>
               ))}
             </SelectContent>
