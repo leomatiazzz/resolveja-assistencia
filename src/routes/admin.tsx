@@ -306,6 +306,32 @@ function NoAccessCard() {
 }
 
 function Dashboard() {
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadCount() {
+      const { count } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("read", false);
+      if (mounted) setUnreadCount(count ?? 0);
+    }
+    loadCount();
+    const channel = supabase
+      .channel("notifications-unread")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications" },
+        () => loadCount(),
+      )
+      .subscribe();
+    return () => {
+      mounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-[image:var(--gradient-soft)]">
       <Toaster richColors position="top-center" />
@@ -338,8 +364,13 @@ function Dashboard() {
             <TabsTrigger value="professionals">
               <Wrench className="mr-2 h-4 w-4" /> Profissionais
             </TabsTrigger>
-            <TabsTrigger value="notifications">
+            <TabsTrigger value="notifications" className="relative">
               <Bell className="mr-2 h-4 w-4" /> Notificações
+              {unreadCount > 0 && (
+                <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[11px] font-semibold text-destructive-foreground">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
             </TabsTrigger>
           </TabsList>
           <TabsContent value="requests">
