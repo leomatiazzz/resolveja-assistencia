@@ -48,6 +48,7 @@ type ServiceRequest = {
   status: string;
   created_at: string;
   assigned_professional_id: string | null;
+  notes_for_professional: string | null;
 };
 
 type Professional = {
