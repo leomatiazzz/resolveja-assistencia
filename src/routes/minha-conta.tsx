@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { Loader2, Wrench, LogOut, Phone, MapPin, Clock, MessageCircle, Star, Plus } from "lucide-react";
 import { RequestChat } from "@/components/RequestChat";
 import { RatingForm } from "@/components/RatingForm";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AddressManager } from "@/components/AddressManager";
 
 export const Route = createFileRoute("/minha-conta")({
   head: () => ({ meta: [{ title: "Minha conta — ResolveJá" }] }),
@@ -117,36 +119,47 @@ function MinhaContaPage() {
       </header>
 
       <main className="mx-auto max-w-4xl px-5 py-6">
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Meus chamados
-        </h2>
+        <Tabs defaultValue="requests">
+          <TabsList className="mb-4">
+            <TabsTrigger value="requests">Meus chamados</TabsTrigger>
+            <TabsTrigger value="addresses">
+              <MapPin className="mr-1.5 h-3.5 w-3.5" /> Endereços
+            </TabsTrigger>
+          </TabsList>
 
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          </div>
-        ) : requests.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
-            <p className="text-sm text-muted-foreground">
-              Você ainda não abriu nenhum chamado.
-            </p>
-            <Link to="/" className="mt-3 inline-block">
-              <Button size="sm">Abrir primeiro chamado</Button>
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {requests.map((r) => (
-              <RequestRow
-                key={r.id}
-                req={r}
-                pro={r.assigned_professional_id ? pros[r.assigned_professional_id] : undefined}
-                rating={ratings[r.id]}
-                onChange={load}
-              />
-            ))}
-          </div>
-        )}
+          <TabsContent value="requests">
+            {loading ? (
+              <div className="flex justify-center py-20">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : requests.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Você ainda não abriu nenhum chamado.
+                </p>
+                <Link to="/" className="mt-3 inline-block">
+                  <Button size="sm">Abrir primeiro chamado</Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {requests.map((r) => (
+                  <RequestRow
+                    key={r.id}
+                    req={r}
+                    pro={r.assigned_professional_id ? pros[r.assigned_professional_id] : undefined}
+                    rating={ratings[r.id]}
+                    onChange={load}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="addresses">
+            <AddressManager />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
