@@ -328,6 +328,7 @@ export type Database = {
           created_at: string
           id: string
           location: string | null
+          notes_for_professional: string | null
           preferred_time: string | null
           problem_description: string
           status: string
@@ -344,6 +345,7 @@ export type Database = {
           created_at?: string
           id?: string
           location?: string | null
+          notes_for_professional?: string | null
           preferred_time?: string | null
           problem_description: string
           status?: string
@@ -360,6 +362,7 @@ export type Database = {
           created_at?: string
           id?: string
           location?: string | null
+          notes_for_professional?: string | null
           preferred_time?: string | null
           problem_description?: string
           status?: string

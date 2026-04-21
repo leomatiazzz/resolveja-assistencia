@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Loader2, Wrench, LogOut, Phone, MapPin, Clock, MessageCircle, Star, Plus } from "lucide-react";
+import { Loader2, Wrench, LogOut, Phone, MapPin, Clock, MessageCircle, Star, Plus, StickyNote, Pencil, Check, X } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { RequestChat } from "@/components/RequestChat";
 import { RatingForm } from "@/components/RatingForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,6 +25,7 @@ type Request = {
   status: string;
   created_at: string;
   assigned_professional_id: string | null;
+  notes_for_professional: string | null;
 };
 
 type Pro = { id: string; full_name: string; phone: string; category: string };
@@ -56,7 +58,7 @@ function MinhaContaPage() {
     setLoading(true);
     const { data: reqs, error } = await supabase
       .from("service_requests")
-      .select("id, category, problem_description, location, urgency, status, created_at, assigned_professional_id")
+      .select("id, category, problem_description, location, urgency, status, created_at, assigned_professional_id, notes_for_professional")
       .order("created_at", { ascending: false });
     if (error) toast.error(error.message);
     const list = (reqs as Request[]) ?? [];
@@ -178,6 +180,9 @@ function RequestRow({
 }) {
   const [showChat, setShowChat] = useState(false);
   const [showRating, setShowRating] = useState(false);
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [notesDraft, setNotesDraft] = useState(req.notes_for_professional ?? "");
+  const [savingNotes, setSavingNotes] = useState(false);
 
   const statusLabel: Record<string, string> = {
     novo: "Novo",
@@ -200,6 +205,23 @@ function RequestRow({
       toast.success("Chamado concluído!");
       onChange();
     }
+  }
+
+  async function saveNotes() {
+    const value = notesDraft.trim().slice(0, 500);
+    setSavingNotes(true);
+    const { error } = await supabase
+      .from("service_requests")
+      .update({ notes_for_professional: value || null })
+      .eq("id", req.id);
+    setSavingNotes(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Notas atualizadas");
+    setEditingNotes(false);
+    onChange();
   }
 
   return (
@@ -238,6 +260,70 @@ function RequestRow({
             <div className="flex items-center gap-1.5">
               <Clock className="h-3 w-3" /> {new Date(req.created_at).toLocaleString("pt-BR")}
             </div>
+          </div>
+
+          <div className="mt-3 rounded-lg border border-accent/40 bg-accent/10 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
+                <StickyNote className="h-3.5 w-3.5" /> Notas para o profissional
+              </div>
+              {!editingNotes && req.status !== "concluido" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNotesDraft(req.notes_for_professional ?? "");
+                    setEditingNotes(true);
+                  }}
+                  className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs text-muted-foreground hover:bg-background hover:text-foreground"
+                >
+                  <Pencil className="h-3 w-3" />
+                  {req.notes_for_professional ? "Editar" : "Adicionar"}
+                </button>
+              )}
+            </div>
+            {editingNotes ? (
+              <div className="mt-2 space-y-2">
+                <Textarea
+                  value={notesDraft}
+                  onChange={(e) => setNotesDraft(e.target.value.slice(0, 500))}
+                  placeholder="Ex: portão azul, tocar interfone 12. Cuidado com o cachorro no quintal."
+                  rows={3}
+                  className="text-sm"
+                />
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{notesDraft.length}/500</span>
+                  <div className="flex gap-1.5">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setEditingNotes(false);
+                        setNotesDraft(req.notes_for_professional ?? "");
+                      }}
+                      disabled={savingNotes}
+                    >
+                      <X className="mr-1 h-3.5 w-3.5" /> Cancelar
+                    </Button>
+                    <Button size="sm" onClick={saveNotes} disabled={savingNotes}>
+                      {savingNotes ? (
+                        <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Check className="mr-1 h-3.5 w-3.5" />
+                      )}
+                      Salvar
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="mt-1.5 text-sm text-foreground">
+                {req.notes_for_professional || (
+                  <span className="text-muted-foreground italic">
+                    Nenhuma observação adicionada. Use este espaço para avisos como acesso, animais, melhor entrada.
+                  </span>
+                )}
+              </p>
+            )}
           </div>
 
           {pro && (

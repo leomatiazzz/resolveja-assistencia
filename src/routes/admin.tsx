@@ -26,6 +26,7 @@ import {
   CheckCircle2,
   XCircle,
   Bell,
+  StickyNote,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
@@ -47,6 +48,7 @@ type ServiceRequest = {
   status: string;
   created_at: string;
   assigned_professional_id: string | null;
+  notes_for_professional: string | null;
 };
 
 type Professional = {
@@ -737,6 +739,19 @@ function RequestCard({
           <p className="mt-2 text-sm font-medium text-foreground">
             {req.problem_description}
           </p>
+          {req.notes_for_professional && (
+            <div className="mt-2 flex items-start gap-2 rounded-lg border border-accent/50 bg-accent/10 p-2.5 text-xs text-accent-foreground">
+              <StickyNote className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+              <div>
+                <div className="text-[10px] font-semibold uppercase tracking-wide text-primary">
+                  Notas para o profissional
+                </div>
+                <p className="mt-0.5 leading-snug text-foreground">
+                  {req.notes_for_professional}
+                </p>
+              </div>
+            </div>
+          )}
           <div className="mt-3 grid gap-1.5 text-xs text-muted-foreground sm:grid-cols-2">
             {req.contact_name && (
               <div>

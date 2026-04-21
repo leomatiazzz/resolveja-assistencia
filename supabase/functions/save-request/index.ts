@@ -32,6 +32,7 @@ serve(async (req) => {
       contact_name,
       contact_phone,
       user_id,
+      notes_for_professional,
     } = body;
 
     if (!category || !problem_description) {
@@ -66,6 +67,9 @@ serve(async (req) => {
         contact_name: contact_name ? String(contact_name).slice(0, 100) : null,
         contact_phone: contact_phone
           ? String(contact_phone).slice(0, 30)
+          : null,
+        notes_for_professional: notes_for_professional
+          ? String(notes_for_professional).trim().slice(0, 500) || null
           : null,
         user_id: user_id ?? null,
       })
