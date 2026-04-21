@@ -317,13 +317,24 @@ export function ChatBot() {
       if (toolCallBuffer.name === "register_service_request") {
         try {
           const args = JSON.parse(toolCallBuffer.args || "{}");
+          // Se o usuário tem endereço padrão, força ele como location.
+          const finalArgs = defaultAddress
+            ? { ...args, location: formatAddress(defaultAddress) }
+            : args;
           const { data: saveData, error } = await supabase.functions.invoke("save-request", {
-            body: { ...args, conversation_id: convId, user_id: userId },
+            body: { ...finalArgs, conversation_id: convId, user_id: userId },
           });
           if (error) throw error;
           setRequestRegistered(true);
           if (saveData?.id) setRequestId(saveData.id);
           toast.success("Solicitação registrada!");
+          // Memoriza o que o assistente coletou para oferecer salvar como endereço.
+          if (typeof args.location === "string" && args.location.trim()) {
+            setCollectedLocation(args.location.trim());
+          }
+          if (userId && !defaultAddress && args.location) {
+            setOfferSaveAddress(true);
+          }
           const found = (saveData?.matches ?? []) as Match[];
           setMatches(found);
           if (!assistantSoFar.trim()) {
