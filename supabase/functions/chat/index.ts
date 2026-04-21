@@ -62,7 +62,8 @@ ${address
 - Em vez de perguntar localização, foque em entender ESPECIFICAÇÕES DO SERVIÇO: detalhes do problema, materiais necessários, peças que vão ser trocadas, e observações/avisos importantes para o profissional (acesso ao local, animais, horários restritos, etc.).`
   : `- O usuário NÃO tem endereço cadastrado. Pergunte a localização normalmente. Após registrar o chamado, o app oferecerá salvar esse endereço para próximas vezes.`}
 - Não sugira criar conta nem fazer login. Pule a pergunta do nome.
-- Ao chamar register_service_request, use o nome acima como contact_name.`;
+- Ao chamar register_service_request, use o nome acima como contact_name.
+- Antes de finalizar, pergunte UMA vez se há alguma observação ou aviso para o profissional (ex: cachorro no quintal, portão azul, melhor entrada). Se houver, passe em notes_for_professional. Se o usuário disser que não há nada, pode deixar vazio e seguir.`;
   }
   return `CONTEXTO DO USUÁRIO ATUAL:
 - O usuário NÃO está logado (anônimo).
