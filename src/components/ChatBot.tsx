@@ -378,6 +378,15 @@ export function ChatBot() {
                     toast.error(error.message);
                     return;
                   }
+                  // Registra notificação para o profissional (visível no painel admin)
+                  const clientName = profile?.full_name?.trim() || "Cliente";
+                  await supabase.from("notifications").insert({
+                    professional_id: p.id,
+                    service_request_id: requestId,
+                    type: "professional_assigned",
+                    title: "Novo chamado atribuído",
+                    message: `${clientName} escolheu você para um serviço. Acesse o painel para ver os detalhes.`,
+                  });
                   setChosenProId(p.id);
                   toast.success(`${p.full_name} foi designado ao seu chamado!`);
                 }}
