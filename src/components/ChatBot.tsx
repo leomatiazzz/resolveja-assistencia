@@ -139,6 +139,26 @@ export function ChatBot() {
     });
   }, [messages, isLoading]);
 
+  // Auto-finalize after login restored a draft: send a hidden trigger so the AI
+  // immediately calls register_service_request with the data already collected.
+  useEffect(() => {
+    if (!autoFinalizeRef.current) return;
+    if (!userId || !userProfile) return;
+    if (isLoading || requestRegistered) return;
+    autoFinalizeRef.current = false;
+    const firstName = userProfile.full_name?.split(" ")[0];
+    const welcome: Msg = {
+      role: "assistant",
+      content: `✅ Pronto${firstName ? `, **${firstName}**` : ""}! Você entrou na sua conta. Vou finalizar sua solicitação agora com os dados que já coletamos…`,
+    };
+    setMessages((prev) => [...prev, welcome]);
+    // Send a system-style trigger message to the AI to finalize.
+    void handleSend(
+      "Acabei de fazer login na minha conta. Por favor, finalize agora minha solicitação chamando register_service_request com todos os dados que já coletamos nesta conversa, sem fazer mais perguntas.",
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, userProfile]);
+
   async function ensureConversation(): Promise<string> {
     if (conversationId) return conversationId;
     const sessionId = getSessionId();
