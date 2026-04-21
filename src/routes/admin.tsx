@@ -722,8 +722,8 @@ function RequestCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold uppercase text-primary-foreground">
-              {req.category.replace(/_/g, " ")}
+            <span className="rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold text-primary-foreground">
+              {categoryLabel(req.category)}
             </span>
             {urgent && (
               <span className="rounded-full bg-destructive px-2.5 py-0.5 text-xs font-semibold text-destructive-foreground">
