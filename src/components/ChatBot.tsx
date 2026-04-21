@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { Send, Loader2, Wrench, CheckCircle2, Phone, UserCheck } from "lucide-react";
+import { Send, Loader2, Wrench, CheckCircle2, Phone, UserCheck, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
+import { formatAddress, type Address } from "@/components/AddressManager";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
