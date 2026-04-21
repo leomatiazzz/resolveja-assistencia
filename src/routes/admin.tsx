@@ -740,13 +740,15 @@ function RequestCard({
             {req.problem_description}
           </p>
           {req.notes_for_professional && (
-            <div className="mt-2 flex items-start gap-2 rounded-lg border border-amber-300/50 bg-amber-50 p-2.5 text-xs text-amber-900 dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-100">
-              <StickyNote className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <div className="mt-2 flex items-start gap-2 rounded-lg border border-accent/50 bg-accent/10 p-2.5 text-xs text-accent-foreground">
+              <StickyNote className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
               <div>
-                <div className="font-semibold uppercase tracking-wide text-[10px] opacity-80">
+                <div className="text-[10px] font-semibold uppercase tracking-wide text-primary">
                   Notas para o profissional
                 </div>
-                <p className="mt-0.5 leading-snug">{req.notes_for_professional}</p>
+                <p className="mt-0.5 leading-snug text-foreground">
+                  {req.notes_for_professional}
+                </p>
               </div>
             </div>
           )}
