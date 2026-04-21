@@ -379,7 +379,7 @@ export function ChatBot() {
                     return;
                   }
                   // Registra notificação para o profissional (visível no painel admin)
-                  const clientName = profile?.full_name?.trim() || "Cliente";
+                  const clientName = userProfile?.full_name?.trim() || "Cliente";
                   await supabase.from("notifications").insert({
                     professional_id: p.id,
                     service_request_id: requestId,
