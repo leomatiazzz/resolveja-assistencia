@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { Send, Loader2, Wrench, CheckCircle2 } from "lucide-react";
+import { Send, Loader2, Wrench, CheckCircle2, Phone, UserCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { Link } from "@tanstack/react-router";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -51,7 +52,20 @@ export function ChatBot() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [requestRegistered, setRequestRegistered] = useState(false);
   const [matches, setMatches] = useState<Match[]>([]);
+  const [requestId, setRequestId] = useState<string | null>(null);
+  const [chosenProId, setChosenProId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUserId(session?.user?.id ?? null);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+      setUserId(s?.user?.id ?? null);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -198,10 +212,11 @@ export function ChatBot() {
         try {
           const args = JSON.parse(toolCallBuffer.args || "{}");
           const { data: saveData, error } = await supabase.functions.invoke("save-request", {
-            body: { ...args, conversation_id: convId },
+            body: { ...args, conversation_id: convId, user_id: userId },
           });
           if (error) throw error;
           setRequestRegistered(true);
+          if (saveData?.id) setRequestId(saveData.id);
           toast.success("Solicitação registrada!");
           const found = (saveData?.matches ?? []) as Match[];
           setMatches(found);

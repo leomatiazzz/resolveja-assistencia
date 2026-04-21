@@ -31,6 +31,7 @@ serve(async (req) => {
       preferred_time,
       contact_name,
       contact_phone,
+      user_id,
     } = body;
 
     if (!category || !problem_description) {
@@ -66,6 +67,7 @@ serve(async (req) => {
         contact_phone: contact_phone
           ? String(contact_phone).slice(0, 30)
           : null,
+        user_id: user_id ?? null,
       })
       .select()
       .single();
