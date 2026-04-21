@@ -647,8 +647,8 @@ function ProfessionalCard({
             <h3 className="text-sm font-semibold text-foreground">
               {pro.full_name}
             </h3>
-            <span className="rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold uppercase text-primary-foreground">
-              {pro.category.replace(/_/g, " ")}
+            <span className="rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold text-primary-foreground">
+              {categoryLabel(pro.category)}
             </span>
             <span
               className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusColor}`}
