@@ -58,7 +58,7 @@ function MinhaContaPage() {
     setLoading(true);
     const { data: reqs, error } = await supabase
       .from("service_requests")
-      .select("id, category, problem_description, location, urgency, status, created_at, assigned_professional_id")
+      .select("id, category, problem_description, location, urgency, status, created_at, assigned_professional_id, notes_for_professional")
       .order("created_at", { ascending: false });
     if (error) toast.error(error.message);
     const list = (reqs as Request[]) ?? [];
