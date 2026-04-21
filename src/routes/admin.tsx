@@ -26,6 +26,7 @@ import {
   CheckCircle2,
   XCircle,
   Bell,
+  StickyNote,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
