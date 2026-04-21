@@ -370,6 +370,8 @@ export function ChatBot() {
                 </p>
                 <Link
                   to="/login"
+                  search={{ redirect: "/" }}
+                  onClick={() => saveDraft(messages, conversationId)}
                   className="mt-2 inline-block rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
                 >
                   Criar conta / Entrar
@@ -422,6 +424,8 @@ export function ChatBot() {
             </span>
             <Link
               to="/login"
+              search={{ redirect: "/" }}
+              onClick={() => saveDraft(messages, conversationId)}
               className="shrink-0 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
             >
               Criar conta / Entrar
