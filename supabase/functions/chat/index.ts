@@ -38,14 +38,29 @@ Se não entender, peça esclarecimento gentilmente. Se o usuário não souber qu
 
 IMPORTANTE: Quando tiver TODAS as informações (problema, categoria, localização, urgência, horário, nome), chame a ferramenta register_service_request com os dados coletados, e em seguida envie uma mensagem amigável confirmando que a solicitação foi registrada.`;
 
-function buildContextPrompt(ctx: { logged_in?: boolean; full_name?: string | null; phone?: string | null } | undefined): string {
+function buildContextPrompt(
+  ctx:
+    | {
+        logged_in?: boolean;
+        full_name?: string | null;
+        phone?: string | null;
+        default_address?: string | null;
+      }
+    | undefined,
+): string {
   if (ctx?.logged_in) {
     const name = ctx.full_name?.trim();
     const phone = ctx.phone?.trim();
+    const address = ctx.default_address?.trim();
     return `CONTEXTO DO USUÁRIO ATUAL:
 - O usuário JÁ ESTÁ LOGADO em uma conta ResolveJá.
 ${name ? `- Nome cadastrado: ${name} (NÃO pergunte o nome novamente, use este).` : "- Nome cadastrado não disponível — você ainda pode perguntar o nome se necessário."}
 ${phone ? `- Telefone cadastrado: ${phone} (não precisa pedir de novo).` : ""}
+${address
+  ? `- Endereço padrão cadastrado: ${address}
+- USE este endereço como location ao chamar register_service_request — NÃO pergunte localização novamente. Apenas mencione brevemente que o serviço será nesse endereço (ex: "Vou usar o endereço cadastrado: ...") e siga em frente. Se o usuário disser que é em outro lugar, aí sim pergunte qual.
+- Em vez de perguntar localização, foque em entender ESPECIFICAÇÕES DO SERVIÇO: detalhes do problema, materiais necessários, peças que vão ser trocadas, e observações/avisos importantes para o profissional (acesso ao local, animais, horários restritos, etc.).`
+  : `- O usuário NÃO tem endereço cadastrado. Pergunte a localização normalmente. Após registrar o chamado, o app oferecerá salvar esse endereço para próximas vezes.`}
 - Não sugira criar conta nem fazer login. Pule a pergunta do nome.
 - Ao chamar register_service_request, use o nome acima como contact_name.`;
   }

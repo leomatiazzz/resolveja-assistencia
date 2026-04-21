@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { Send, Loader2, Wrench, CheckCircle2, Phone, UserCheck } from "lucide-react";
+import { Send, Loader2, Wrench, CheckCircle2, Phone, UserCheck, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
+import { formatAddress, type Address } from "@/components/AddressManager";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -98,6 +99,9 @@ export function ChatBot() {
   const [chosenProId, setChosenProId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<{ full_name: string | null; phone: string | null } | null>(null);
+  const [defaultAddress, setDefaultAddress] = useState<Address | null>(null);
+  const [collectedLocation, setCollectedLocation] = useState<string | null>(null);
+  const [offerSaveAddress, setOfferSaveAddress] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoFinalizeRef = useRef(false);
 
@@ -114,6 +118,14 @@ export function ChatBot() {
         .eq("user_id", uid)
         .maybeSingle();
       setUserProfile(data ?? { full_name: null, phone: null });
+
+      const { data: addr } = await supabase
+        .from("addresses")
+        .select("*")
+        .eq("user_id", uid)
+        .eq("is_default", true)
+        .maybeSingle();
+      setDefaultAddress((addr as Address) ?? null);
 
       // After login, restore any draft conversation saved before redirect
       const draft = loadDraft();
@@ -237,6 +249,7 @@ export function ChatBot() {
             logged_in: !!userId,
             full_name: userProfile?.full_name ?? null,
             phone: userProfile?.phone ?? null,
+            default_address: defaultAddress ? formatAddress(defaultAddress) : null,
           },
         }),
       });
@@ -303,13 +316,24 @@ export function ChatBot() {
       if (toolCallBuffer.name === "register_service_request") {
         try {
           const args = JSON.parse(toolCallBuffer.args || "{}");
+          // Se o usuário tem endereço padrão, força ele como location.
+          const finalArgs = defaultAddress
+            ? { ...args, location: formatAddress(defaultAddress) }
+            : args;
           const { data: saveData, error } = await supabase.functions.invoke("save-request", {
-            body: { ...args, conversation_id: convId, user_id: userId },
+            body: { ...finalArgs, conversation_id: convId, user_id: userId },
           });
           if (error) throw error;
           setRequestRegistered(true);
           if (saveData?.id) setRequestId(saveData.id);
           toast.success("Solicitação registrada!");
+          // Memoriza o que o assistente coletou para oferecer salvar como endereço.
+          if (typeof args.location === "string" && args.location.trim()) {
+            setCollectedLocation(args.location.trim());
+          }
+          if (userId && !defaultAddress && args.location) {
+            setOfferSaveAddress(true);
+          }
           const found = (saveData?.matches ?? []) as Match[];
           setMatches(found);
           if (!assistantSoFar.trim()) {
@@ -353,6 +377,24 @@ export function ChatBot() {
           <CheckCircle2 className="h-5 w-5 text-accent" />
         )}
       </header>
+
+      {userId && defaultAddress && !requestRegistered && (
+        <div className="flex items-center justify-between gap-2 border-b border-border bg-primary/5 px-4 py-2 text-xs">
+          <div className="flex min-w-0 items-center gap-1.5 text-foreground">
+            <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-primary" />
+            <span className="truncate">
+              <span className="font-semibold">{defaultAddress.label}:</span>{" "}
+              {formatAddress(defaultAddress)}
+            </span>
+          </div>
+          <Link
+            to="/minha-conta"
+            className="flex-shrink-0 font-semibold text-primary hover:underline"
+          >
+            Trocar
+          </Link>
+        </div>
+      )}
 
       <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-5">
         {messages
@@ -415,6 +457,41 @@ export function ChatBot() {
                 </Link>.
               </div>
             )}
+          </div>
+        )}
+        {requestRegistered && offerSaveAddress && collectedLocation && (
+          <div className="rounded-2xl border border-primary/30 bg-primary/5 p-3 text-xs">
+            <div className="flex items-start gap-2">
+              <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+              <div className="flex-1">
+                <p className="font-semibold text-foreground">
+                  Salvar este endereço para próximas vezes?
+                </p>
+                <p className="mt-0.5 text-muted-foreground">
+                  &ldquo;{collectedLocation}&rdquo;
+                </p>
+                <p className="mt-1 text-muted-foreground">
+                  Cadastre o endereço completo na sua conta — assim o assistente
+                  já sabe onde o serviço será feito e o foco da conversa fica
+                  nos detalhes do problema.
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Link
+                    to="/minha-conta"
+                    className="inline-block rounded-full bg-primary px-3 py-1.5 font-semibold text-primary-foreground hover:bg-primary/90"
+                  >
+                    Cadastrar endereço
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setOfferSaveAddress(false)}
+                    className="rounded-full border border-border bg-card px-3 py-1.5 font-medium text-foreground hover:bg-secondary"
+                  >
+                    Agora não
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
         {isLoading && messages[messages.length - 1]?.role === "user" && (
