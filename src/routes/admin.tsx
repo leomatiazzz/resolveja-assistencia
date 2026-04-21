@@ -754,7 +754,15 @@ function RequestCard({
             {req.location && (
               <div className="flex items-center gap-1.5">
                 <MapPin className="h-3 w-3" />
-                {req.location}
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(req.location)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline-offset-2 hover:underline"
+                  title="Abrir no Google Maps"
+                >
+                  {req.location}
+                </a>
               </div>
             )}
             {req.preferred_time && (
