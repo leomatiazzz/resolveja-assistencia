@@ -783,6 +783,8 @@ function NotificationsTab() {
   const [items, setItems] = useState<NotificationRow[]>([]);
   const [pros, setPros] = useState<Record<string, { full_name: string; phone: string; email: string | null }>>({});
   const [loading, setLoading] = useState(true);
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [readFilter, setReadFilter] = useState<string>("all");
 
   useEffect(() => {
     load();
@@ -825,18 +827,60 @@ function NotificationsTab() {
       </div>
     );
   }
-  if (items.length === 0) {
-    return (
-      <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
-        <p className="text-sm text-muted-foreground">
-          Nenhuma notificação ainda. Quando um cliente escolher um profissional no chat, ela aparecerá aqui.
-        </p>
-      </div>
-    );
-  }
+  const filtered = items.filter((n) => {
+    if (typeFilter !== "all" && n.type !== typeFilter) return false;
+    if (readFilter === "unread" && n.read) return false;
+    if (readFilter === "read" && !n.read) return false;
+    return true;
+  });
+  const unreadVisible = filtered.filter((n) => !n.read).length;
+
   return (
-    <div className="grid gap-3">
-      {items.map((n) => {
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-border bg-card p-3">
+        <div className="min-w-[180px] flex-1">
+          <Label className="text-xs">Tipo</Label>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os tipos</SelectItem>
+              <SelectItem value="professional_assigned">Atribuído</SelectItem>
+              <SelectItem value="request_completed">Concluído</SelectItem>
+              <SelectItem value="request_cancelled">Cancelado</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="min-w-[160px] flex-1">
+          <Label className="text-xs">Status</Label>
+          <Select value={readFilter} onValueChange={setReadFilter}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="unread">Não lidas</SelectItem>
+              <SelectItem value="read">Lidas</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="text-xs text-muted-foreground">
+          {filtered.length} resultado{filtered.length === 1 ? "" : "s"} · {unreadVisible} não lida{unreadVisible === 1 ? "" : "s"}
+        </div>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
+          <p className="text-sm text-muted-foreground">
+            {items.length === 0
+              ? "Nenhuma notificação ainda. Quando um cliente escolher um profissional no chat, ela aparecerá aqui."
+              : "Nenhuma notificação corresponde aos filtros selecionados."}
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-3">
+          {filtered.map((n) => {
         const pro = pros[n.professional_id];
         return (
           <article
@@ -891,7 +935,9 @@ function NotificationsTab() {
             </div>
           </article>
         );
-      })}
+          })}
+        </div>
+      )}
     </div>
   );
 }
