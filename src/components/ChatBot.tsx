@@ -22,6 +22,8 @@ type Match = {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 const DRAFT_KEY = "resolveja_chat_draft";
+const AUTO_FINALIZE_TRIGGER =
+  "Acabei de fazer login na minha conta. Por favor, finalize agora minha solicitação chamando register_service_request com todos os dados que já coletamos nesta conversa, sem fazer mais perguntas.";
 
 type Draft = {
   messages: Msg[];
@@ -97,6 +99,7 @@ export function ChatBot() {
   const [userId, setUserId] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<{ full_name: string | null; phone: string | null } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const autoFinalizeRef = useRef(false);
 
   useEffect(() => {
     const loadProfile = async (uid: string | null) => {
@@ -117,12 +120,9 @@ export function ChatBot() {
       if (draft && draft.messages.length > 1) {
         setMessages(draft.messages);
         setConversationId(draft.conversationId);
-        const resumeMsg: Msg = {
-          role: "assistant",
-          content: `✅ Bem-vindo${data?.full_name ? `, **${data.full_name.split(" ")[0]}**` : ""}! Você está logado. Vamos continuar de onde paramos? É só me confirmar para eu finalizar sua solicitação.`,
-        };
-        setMessages((prev) => [...prev, resumeMsg]);
         clearDraft();
+        // Trigger auto-finalize on next render once profile is set
+        autoFinalizeRef.current = true;
       }
     };
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -140,6 +140,24 @@ export function ChatBot() {
       behavior: "smooth",
     });
   }, [messages, isLoading]);
+
+  // Auto-finalize after login restored a draft: send a hidden trigger so the AI
+  // immediately calls register_service_request with the data already collected.
+  useEffect(() => {
+    if (!autoFinalizeRef.current) return;
+    if (!userId || !userProfile) return;
+    if (isLoading || requestRegistered) return;
+    autoFinalizeRef.current = false;
+    const firstName = userProfile.full_name?.split(" ")[0];
+    const welcome: Msg = {
+      role: "assistant",
+      content: `✅ Pronto${firstName ? `, **${firstName}**` : ""}! Você entrou na sua conta. Vou finalizar sua solicitação agora com os dados que já coletamos…`,
+    };
+    setMessages((prev) => [...prev, welcome]);
+    // Send a system-style trigger message to the AI to finalize.
+    void handleSend(AUTO_FINALIZE_TRIGGER);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, userProfile]);
 
   async function ensureConversation(): Promise<string> {
     if (conversationId) return conversationId;
@@ -337,9 +355,11 @@ export function ChatBot() {
       </header>
 
       <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-5">
-        {messages.map((m, i) => (
-          <MessageBubble key={i} role={m.role} content={m.content} />
-        ))}
+        {messages
+          .filter((m) => m.content !== AUTO_FINALIZE_TRIGGER)
+          .map((m, i) => (
+            <MessageBubble key={i} role={m.role} content={m.content} />
+          ))}
         {matches.length > 0 && (
           <div className="space-y-2">
             {matches.map((p) => (
