@@ -379,6 +379,24 @@ export function ChatBot() {
         )}
       </header>
 
+      {userId && defaultAddress && !requestRegistered && (
+        <div className="flex items-center justify-between gap-2 border-b border-border bg-primary/5 px-4 py-2 text-xs">
+          <div className="flex min-w-0 items-center gap-1.5 text-foreground">
+            <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-primary" />
+            <span className="truncate">
+              <span className="font-semibold">{defaultAddress.label}:</span>{" "}
+              {formatAddress(defaultAddress)}
+            </span>
+          </div>
+          <Link
+            to="/minha-conta"
+            className="flex-shrink-0 font-semibold text-primary hover:underline"
+          >
+            Trocar
+          </Link>
+        </div>
+      )}
+
       <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-5">
         {messages
           .filter((m) => m.content !== AUTO_FINALIZE_TRIGGER)
