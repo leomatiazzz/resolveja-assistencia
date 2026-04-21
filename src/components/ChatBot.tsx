@@ -55,14 +55,28 @@ export function ChatBot() {
   const [requestId, setRequestId] = useState<string | null>(null);
   const [chosenProId, setChosenProId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<{ full_name: string | null; phone: string | null } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const loadProfile = async (uid: string | null) => {
+      setUserId(uid);
+      if (!uid) {
+        setUserProfile(null);
+        return;
+      }
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name, phone")
+        .eq("user_id", uid)
+        .maybeSingle();
+      setUserProfile(data ?? { full_name: null, phone: null });
+    };
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUserId(session?.user?.id ?? null);
+      loadProfile(session?.user?.id ?? null);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
-      setUserId(s?.user?.id ?? null);
+      loadProfile(s?.user?.id ?? null);
     });
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -146,7 +160,14 @@ export function ChatBot() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: history }),
+        body: JSON.stringify({
+          messages: history,
+          user_context: {
+            logged_in: !!userId,
+            full_name: userProfile?.full_name ?? null,
+            phone: userProfile?.phone ?? null,
+          },
+        }),
       });
 
       if (resp.status === 429) {
