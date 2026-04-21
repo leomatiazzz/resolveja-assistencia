@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Loader2, Wrench, LogOut, Phone, MapPin, Clock, MessageCircle, Star, Plus } from "lucide-react";
+import { Loader2, Wrench, LogOut, Phone, MapPin, Clock, MessageCircle, Star, Plus, StickyNote, Pencil, Check, X } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { RequestChat } from "@/components/RequestChat";
 import { RatingForm } from "@/components/RatingForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,6 +25,7 @@ type Request = {
   status: string;
   created_at: string;
   assigned_professional_id: string | null;
+  notes_for_professional: string | null;
 };
 
 type Pro = { id: string; full_name: string; phone: string; category: string };
