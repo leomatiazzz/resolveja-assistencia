@@ -22,6 +22,8 @@ type Match = {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 const DRAFT_KEY = "resolveja_chat_draft";
+const AUTO_FINALIZE_TRIGGER =
+  "Acabei de fazer login na minha conta. Por favor, finalize agora minha solicitação chamando register_service_request com todos os dados que já coletamos nesta conversa, sem fazer mais perguntas.";
 
 type Draft = {
   messages: Msg[];
