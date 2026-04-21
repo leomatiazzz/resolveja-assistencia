@@ -97,6 +97,7 @@ export function ChatBot() {
   const [userId, setUserId] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<{ full_name: string | null; phone: string | null } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const autoFinalizeRef = useRef(false);
 
   useEffect(() => {
     const loadProfile = async (uid: string | null) => {
@@ -117,12 +118,9 @@ export function ChatBot() {
       if (draft && draft.messages.length > 1) {
         setMessages(draft.messages);
         setConversationId(draft.conversationId);
-        const resumeMsg: Msg = {
-          role: "assistant",
-          content: `✅ Bem-vindo${data?.full_name ? `, **${data.full_name.split(" ")[0]}**` : ""}! Você está logado. Vamos continuar de onde paramos? É só me confirmar para eu finalizar sua solicitação.`,
-        };
-        setMessages((prev) => [...prev, resumeMsg]);
         clearDraft();
+        // Trigger auto-finalize on next render once profile is set
+        autoFinalizeRef.current = true;
       }
     };
     supabase.auth.getSession().then(({ data: { session } }) => {
