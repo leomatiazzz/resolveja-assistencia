@@ -486,7 +486,6 @@ export function ChatBot() {
                     type="button"
                     onClick={() => setOfferSaveAddress(false)}
                     className="rounded-full border border-border bg-card px-3 py-1.5 font-medium text-foreground hover:bg-secondary"
-                    disabled={savingAddress}
                   >
                     Agora não
                   </button>
