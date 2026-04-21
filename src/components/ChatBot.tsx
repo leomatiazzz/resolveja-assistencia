@@ -102,7 +102,6 @@ export function ChatBot() {
   const [defaultAddress, setDefaultAddress] = useState<Address | null>(null);
   const [collectedLocation, setCollectedLocation] = useState<string | null>(null);
   const [offerSaveAddress, setOfferSaveAddress] = useState(false);
-  const [savingAddress, setSavingAddress] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoFinalizeRef = useRef(false);
 
