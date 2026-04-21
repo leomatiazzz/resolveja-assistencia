@@ -116,6 +116,20 @@ function LoginCard() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (mode === "signup") {
+      if (password.length < 8) {
+        toast.error("A senha deve ter no mínimo 8 caracteres.");
+        return;
+      }
+      if (!/[A-Z]/.test(password)) {
+        toast.error("A senha deve conter ao menos uma letra maiúscula.");
+        return;
+      }
+      if (!/[^A-Za-z0-9]/.test(password)) {
+        toast.error("A senha deve conter ao menos um caractere especial.");
+        return;
+      }
+    }
     setLoading(true);
     if (mode === "signin") {
       const { error } = await supabase.auth.signInWithPassword({
@@ -130,7 +144,10 @@ function LoginCard() {
         options: { emailRedirectTo: `${window.location.origin}/admin` },
       });
       if (error) toast.error(error.message);
-      else toast.success("Conta criada! Peça acesso de admin.");
+      else
+        toast.success(
+          "Conta criada! Confirme seu email e faça login para acessar o painel.",
+        );
     }
     setLoading(false);
   }
@@ -162,10 +179,15 @@ function LoginCard() {
               id="password"
               type="password"
               required
-              minLength={6}
+              minLength={mode === "signup" ? 8 : undefined}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+            {mode === "signup" && (
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Mínimo 8 caracteres, 1 maiúscula e 1 caractere especial.
+              </p>
+            )}
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? (
