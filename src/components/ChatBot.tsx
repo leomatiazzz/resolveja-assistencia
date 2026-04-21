@@ -55,14 +55,28 @@ export function ChatBot() {
   const [requestId, setRequestId] = useState<string | null>(null);
   const [chosenProId, setChosenProId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<{ full_name: string | null; phone: string | null } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const loadProfile = async (uid: string | null) => {
+      setUserId(uid);
+      if (!uid) {
+        setUserProfile(null);
+        return;
+      }
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name, phone")
+        .eq("user_id", uid)
+        .maybeSingle();
+      setUserProfile(data ?? { full_name: null, phone: null });
+    };
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUserId(session?.user?.id ?? null);
+      loadProfile(session?.user?.id ?? null);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
-      setUserId(s?.user?.id ?? null);
+      loadProfile(s?.user?.id ?? null);
     });
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -146,7 +160,14 @@ export function ChatBot() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: history }),
+        body: JSON.stringify({
+          messages: history,
+          user_context: {
+            logged_in: !!userId,
+            full_name: userProfile?.full_name ?? null,
+            phone: userProfile?.phone ?? null,
+          },
+        }),
       });
 
       if (resp.status === 429) {
@@ -339,8 +360,22 @@ export function ChatBot() {
           e.preventDefault();
           handleSend();
         }}
-        className="flex items-center gap-2 border-t border-border bg-background px-3 py-3"
+        className="flex flex-col gap-2 border-t border-border bg-background px-3 py-3"
       >
+        {!userId && messages.length > 2 && !requestRegistered && (
+          <div className="flex items-center justify-between gap-2 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
+            <span className="text-foreground">
+              💡 Tem conta? Faça login para acompanhar seu chamado.
+            </span>
+            <Link
+              to="/login"
+              className="shrink-0 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+            >
+              Criar conta / Entrar
+            </Link>
+          </div>
+        )}
+        <div className="flex items-center gap-2">
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -361,6 +396,7 @@ export function ChatBot() {
             <Send className="h-4 w-4" />
           )}
         </Button>
+        </div>
       </form>
     </div>
   );

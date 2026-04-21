@@ -38,13 +38,31 @@ Se não entender, peça esclarecimento gentilmente. Se o usuário não souber qu
 
 IMPORTANTE: Quando tiver TODAS as informações (problema, categoria, localização, urgência, horário, nome), chame a ferramenta register_service_request com os dados coletados, e em seguida envie uma mensagem amigável confirmando que a solicitação foi registrada.`;
 
+function buildContextPrompt(ctx: { logged_in?: boolean; full_name?: string | null; phone?: string | null } | undefined): string {
+  if (ctx?.logged_in) {
+    const name = ctx.full_name?.trim();
+    const phone = ctx.phone?.trim();
+    return `CONTEXTO DO USUÁRIO ATUAL:
+- O usuário JÁ ESTÁ LOGADO em uma conta ResolveJá.
+${name ? `- Nome cadastrado: ${name} (NÃO pergunte o nome novamente, use este).` : "- Nome cadastrado não disponível — você ainda pode perguntar o nome se necessário."}
+${phone ? `- Telefone cadastrado: ${phone} (não precisa pedir de novo).` : ""}
+- Não sugira criar conta nem fazer login. Pule a pergunta do nome.
+- Ao chamar register_service_request, use o nome acima como contact_name.`;
+  }
+  return `CONTEXTO DO USUÁRIO ATUAL:
+- O usuário NÃO está logado (anônimo).
+- IMPORTANTE: Antes de finalizar (antes de chamar register_service_request), quando já tiver coletado o problema, localização, urgência e horário, sugira de forma gentil que o usuário crie uma conta ou faça login para acompanhar o chamado, conversar com o profissional e avaliar o serviço depois. Diga algo como: "Para finalizar, recomendo que você crie uma conta ou faça login — assim você acompanha tudo em um só lugar. Quer fazer isso agora? Se preferir continuar sem conta, é só me dizer." 
+- Se o usuário aceitar, oriente-o a clicar em "Criar conta / Entrar" no rodapé do chat e diga que após o login ele pode retomar a solicitação.
+- Se o usuário recusar e quiser continuar sem conta, pergunte então o nome para contato e prossiga normalmente com register_service_request.`;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { messages } = await req.json();
+    const { messages, user_context } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -119,6 +137,7 @@ serve(async (req) => {
           model: "google/gemini-3-flash-preview",
           messages: [
             { role: "system", content: SYSTEM_PROMPT },
+            { role: "system", content: buildContextPrompt(user_context) },
             ...messages,
           ],
           tools,
