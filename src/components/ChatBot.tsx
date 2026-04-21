@@ -99,6 +99,10 @@ export function ChatBot() {
   const [chosenProId, setChosenProId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<{ full_name: string | null; phone: string | null } | null>(null);
+  const [defaultAddress, setDefaultAddress] = useState<Address | null>(null);
+  const [collectedLocation, setCollectedLocation] = useState<string | null>(null);
+  const [offerSaveAddress, setOfferSaveAddress] = useState(false);
+  const [savingAddress, setSavingAddress] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoFinalizeRef = useRef(false);
 
@@ -115,6 +119,14 @@ export function ChatBot() {
         .eq("user_id", uid)
         .maybeSingle();
       setUserProfile(data ?? { full_name: null, phone: null });
+
+      const { data: addr } = await supabase
+        .from("addresses")
+        .select("*")
+        .eq("user_id", uid)
+        .eq("is_default", true)
+        .maybeSingle();
+      setDefaultAddress((addr as Address) ?? null);
 
       // After login, restore any draft conversation saved before redirect
       const draft = loadDraft();
