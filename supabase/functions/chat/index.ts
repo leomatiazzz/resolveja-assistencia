@@ -125,6 +125,11 @@ serve(async (req) => {
                 type: "string",
                 description: "Telefone de contato, se fornecido",
               },
+              notes_for_professional: {
+                type: "string",
+                description:
+                  "Observações/avisos importantes para o profissional executar bem o serviço (ex: 'cuidado com o cachorro', 'portão azul, tocar interfone 12', 'há crianças em casa', 'acesso pela garagem'). Distinto da descrição do problema. Deixe vazio se não houver nada relevante.",
+              },
             },
             required: [
               "category",
