@@ -155,9 +155,7 @@ export function ChatBot() {
     };
     setMessages((prev) => [...prev, welcome]);
     // Send a system-style trigger message to the AI to finalize.
-    void handleSend(
-      "Acabei de fazer login na minha conta. Por favor, finalize agora minha solicitação chamando register_service_request com todos os dados que já coletamos nesta conversa, sem fazer mais perguntas.",
-    );
+    void handleSend(AUTO_FINALIZE_TRIGGER);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, userProfile]);
 
