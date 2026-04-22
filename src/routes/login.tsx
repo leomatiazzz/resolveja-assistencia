@@ -1,5 +1,8 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,15 +23,49 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
+const passwordSchema = z
+  .string()
+  .min(8, "A senha deve ter no mínimo 8 caracteres.")
+  .regex(/[A-Z]/, "A senha deve conter ao menos uma letra maiúscula.")
+  .regex(/[^A-Za-z0-9]/, "A senha deve conter ao menos um caractere especial.");
+
+const signinSchema = z.object({
+  fullName: z.string().optional(),
+  email: z.string().trim().email("Email inválido."),
+  password: z.string().min(1, "Informe sua senha."),
+});
+
+const signupSchema = z.object({
+  fullName: z.string().trim().min(2, "Informe seu nome completo."),
+  email: z.string().trim().email("Email inválido."),
+  password: passwordSchema,
+});
+
+type AuthFormValues = {
+  fullName?: string;
+  email: string;
+  password: string;
+};
+
 function LoginPage() {
   const navigate = useNavigate();
   const { redirect } = useSearch({ from: "/login" });
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [resetMode, setResetMode] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [resetEmail, setResetEmail] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const form = useForm<AuthFormValues>({
+    resolver: zodResolver(mode === "signup" ? signupSchema : signinSchema),
+    defaultValues: { fullName: "", email: "", password: "" },
+    mode: "onSubmit",
+  });
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = form;
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -36,49 +73,35 @@ function LoginPage() {
     });
   }, [navigate, redirect]);
 
-  function validatePassword(p: string): string | null {
-    if (p.length < 8) return "A senha deve ter no mínimo 8 caracteres.";
-    if (!/[A-Z]/.test(p)) return "A senha deve conter ao menos uma letra maiúscula.";
-    if (!/[^A-Za-z0-9]/.test(p)) return "A senha deve conter ao menos um caractere especial.";
-    return null;
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  const onSubmit = handleSubmit(async ({ email, password, fullName }) => {
     setLoading(true);
     if (mode === "signin") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) toast.error(error.message);
       else navigate({ to: redirect ?? "/minha-conta" });
     } else {
-      const err = validatePassword(password);
-      if (err) {
-        toast.error(err);
-        setLoading(false);
-        return;
-      }
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/minha-conta`,
-          data: { full_name: fullName },
+          data: { full_name: fullName ?? "" },
         },
       });
       if (error) toast.error(error.message);
       else toast.success("Conta criada! Confirme seu email para entrar.");
     }
     setLoading(false);
-  }
+  });
 
   async function handleReset(e: React.FormEvent) {
     e.preventDefault();
-    if (!email) {
+    if (!resetEmail) {
       toast.error("Digite seu email.");
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     if (error) toast.error(error.message);
@@ -106,7 +129,7 @@ function LoginPage() {
             </p>
             <div>
               <Label htmlFor="r-email">Email</Label>
-              <Input id="r-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Input id="r-email" type="email" required value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Enviar link"}
@@ -116,27 +139,29 @@ function LoginPage() {
             </button>
           </form>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-3">
+          <form onSubmit={onSubmit} className="space-y-3" noValidate>
             {mode === "signup" && (
               <div>
                 <Label htmlFor="fname">Nome completo</Label>
-                <Input id="fname" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                <Input id="fname" {...register("fullName")} />
+                {errors.fullName && (
+                  <p className="mt-1 text-[11px] text-destructive">{errors.fullName.message}</p>
+                )}
               </div>
             )}
             <div>
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Input id="email" type="email" {...register("email")} />
+              {errors.email && (
+                <p className="mt-1 text-[11px] text-destructive">{errors.email.message}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="pwd">Senha</Label>
-              <Input
-                id="pwd"
-                type="password"
-                required
-                minLength={mode === "signup" ? 8 : undefined}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+              <Input id="pwd" type="password" {...register("password")} />
+              {errors.password && (
+                <p className="mt-1 text-[11px] text-destructive">{errors.password.message}</p>
+              )}
               {mode === "signup" && (
                 <p className="mt-1 text-[11px] text-muted-foreground">
                   Mín. 8 caracteres, 1 maiúscula e 1 caractere especial.
@@ -153,7 +178,10 @@ function LoginPage() {
             )}
             <button
               type="button"
-              onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+              onClick={() => {
+                setMode(mode === "signin" ? "signup" : "signin");
+                reset({ fullName: "", email: "", password: "" });
+              }}
               className="w-full text-center text-xs text-muted-foreground hover:text-foreground"
             >
               {mode === "signin" ? "Não tem conta? Criar uma" : "Já tem conta? Entrar"}
