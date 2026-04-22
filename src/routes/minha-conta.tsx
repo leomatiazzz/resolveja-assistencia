@@ -420,7 +420,9 @@ function SettingsPanel() {
     const { error } = await supabase.rpc("delete_my_account");
     if (error) {
       setDeleting(false);
-      toast.error(error.message || "Não foi possível apagar sua conta.");
+      toast.error(friendlyDeleteError(error), {
+        description: "Se o problema persistir, entre em contato com o suporte.",
+      });
       return;
     }
     await supabase.auth.signOut();
