@@ -66,12 +66,6 @@ function Index() {
           >
             Sou profissional
           </Link>
-          <Link
-            to="/admin"
-            className="text-xs font-medium text-muted-foreground hover:text-foreground"
-          >
-            Painel admin
-          </Link>
         </nav>
       </header>
 
@@ -116,6 +110,18 @@ function Index() {
           <ChatBot />
         </section>
       </main>
+
+      <footer className="mx-auto max-w-6xl px-5 py-6">
+        <div className="flex flex-col items-center justify-between gap-2 border-t border-border pt-4 text-xs text-muted-foreground sm:flex-row">
+          <span>© {new Date().getFullYear()} ResolveJá. Todos os direitos reservados.</span>
+          <Link
+            to="/admin"
+            className="text-muted-foreground/70 hover:text-foreground"
+          >
+            Painel admin
+          </Link>
+        </div>
+      </footer>
     </div>
   );
 }
