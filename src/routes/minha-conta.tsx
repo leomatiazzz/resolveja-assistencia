@@ -4,12 +4,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Loader2, Wrench, LogOut, Phone, MapPin, Clock, MessageCircle, Star, Plus, StickyNote, Pencil, Check, X } from "lucide-react";
+import { Loader2, Wrench, LogOut, Phone, MapPin, Clock, MessageCircle, Star, Plus, StickyNote, Pencil, Check, X, Settings, AlertTriangle, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { RequestChat } from "@/components/RequestChat";
 import { RatingForm } from "@/components/RatingForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AddressManager } from "@/components/AddressManager";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/minha-conta")({
   head: () => ({ meta: [{ title: "Minha conta — ResolveJá" }] }),
