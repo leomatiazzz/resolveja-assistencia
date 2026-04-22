@@ -4,12 +4,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Loader2, Wrench, LogOut, Phone, MapPin, Clock, MessageCircle, Star, Plus, StickyNote, Pencil, Check, X } from "lucide-react";
+import { Loader2, Wrench, LogOut, Phone, MapPin, Clock, MessageCircle, Star, Plus, StickyNote, Pencil, Check, X, Settings, AlertTriangle, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { RequestChat } from "@/components/RequestChat";
 import { RatingForm } from "@/components/RatingForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AddressManager } from "@/components/AddressManager";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/minha-conta")({
   head: () => ({ meta: [{ title: "Minha conta — ResolveJá" }] }),
@@ -127,6 +138,9 @@ function MinhaContaPage() {
             <TabsTrigger value="addresses">
               <MapPin className="mr-1.5 h-3.5 w-3.5" /> Endereços
             </TabsTrigger>
+            <TabsTrigger value="settings">
+              <Settings className="mr-1.5 h-3.5 w-3.5" /> Configurações
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="requests">
@@ -160,6 +174,10 @@ function MinhaContaPage() {
 
           <TabsContent value="addresses">
             <AddressManager />
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <SettingsPanel />
           </TabsContent>
         </Tabs>
       </main>
@@ -389,5 +407,85 @@ function RequestRow({
         </div>
       )}
     </article>
+  );
+}
+
+function SettingsPanel() {
+  const navigate = useNavigate();
+  const [deleting, setDeleting] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  async function handleDelete() {
+    setDeleting(true);
+    const { error } = await supabase.rpc("delete_my_account");
+    if (error) {
+      setDeleting(false);
+      toast.error(error.message || "Não foi possível apagar sua conta.");
+      return;
+    }
+    await supabase.auth.signOut();
+    setOpen(false);
+    setDeleting(false);
+    toast.success("Sua conta foi apagada. Sentiremos sua falta!");
+    navigate({ to: "/" });
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-2xl border-2 border-destructive/40 bg-destructive/5 p-5">
+        <div className="flex items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-destructive/15 text-destructive">
+            <AlertTriangle className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-base font-bold text-destructive">Zona de Perigo</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Apagar sua conta é uma ação <strong>permanente e irreversível</strong>. Todo o
+              seu histórico de chamados, endereços salvos e dados de perfil serão removidos
+              definitivamente. Esta ação não pode ser desfeita.
+            </p>
+
+            <AlertDialog open={open} onOpenChange={setOpen}>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" className="mt-4">
+                  <Trash2 className="mr-1.5 h-4 w-4" /> Apagar minha conta
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                    <AlertTriangle className="h-5 w-5" /> Apagar conta permanentemente?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Você está prestes a apagar sua conta da ResolveJá. Todo o histórico de
+                    chamados, endereços e dados pessoais serão removidos e não poderão ser
+                    recuperados. Tem certeza que deseja continuar?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    disabled={deleting}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleDelete();
+                    }}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {deleting ? (
+                      <>
+                        <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> Apagando...
+                      </>
+                    ) : (
+                      "Sim, quero apagar minha conta"
+                    )}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
