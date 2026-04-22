@@ -75,21 +75,28 @@ function LoginPage() {
 
   const onSubmit = handleSubmit(async ({ email, password, fullName }) => {
     setLoading(true);
+    const target = redirect ?? "/minha-conta";
     if (mode === "signin") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) toast.error(error.message);
-      else navigate({ to: redirect ?? "/minha-conta" });
+      else navigate({ to: target });
     } else {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/minha-conta`,
+          emailRedirectTo: `${window.location.origin}${target}`,
           data: { full_name: fullName ?? "" },
         },
       });
-      if (error) toast.error(error.message);
-      else toast.success("Conta criada! Confirme seu email para entrar.");
+      if (error) {
+        toast.error(error.message);
+      } else if (data.session) {
+        toast.success("Conta criada!");
+        navigate({ to: target });
+      } else {
+        toast.success("Conta criada! Confirme seu email para entrar.");
+      }
     }
     setLoading(false);
   });
