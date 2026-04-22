@@ -410,6 +410,36 @@ function RequestRow({
   );
 }
 
+function friendlyDeleteError(error: { message?: string; code?: string } | null): string {
+  const raw = (error?.message ?? "").toLowerCase();
+  const code = error?.code ?? "";
+
+  if (raw.includes("not authenticated") || raw.includes("jwt") || code === "401") {
+    return "Sua sessão expirou. Faça login novamente para apagar sua conta.";
+  }
+  if (
+    raw.includes("permission denied") ||
+    raw.includes("not allowed") ||
+    code === "42501"
+  ) {
+    return "Você não tem permissão para apagar esta conta.";
+  }
+  if (raw.includes("does not exist") || raw.includes("no rows") || raw.includes("not found")) {
+    return "Conta não encontrada. Talvez ela já tenha sido apagada.";
+  }
+  if (
+    raw.includes("foreign key") ||
+    raw.includes("violates") ||
+    raw.includes("constraint")
+  ) {
+    return "Não foi possível apagar a conta porque ainda existem dados vinculados. Tente novamente em instantes.";
+  }
+  if (raw.includes("network") || raw.includes("failed to fetch") || raw.includes("timeout")) {
+    return "Falha de conexão. Verifique sua internet e tente novamente.";
+  }
+  return "Não foi possível apagar sua conta no momento. Tente novamente em alguns instantes.";
+}
+
 function SettingsPanel() {
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(false);
@@ -420,7 +450,9 @@ function SettingsPanel() {
     const { error } = await supabase.rpc("delete_my_account");
     if (error) {
       setDeleting(false);
-      toast.error(error.message || "Não foi possível apagar sua conta.");
+      toast.error(friendlyDeleteError(error), {
+        description: "Se o problema persistir, entre em contato com o suporte.",
+      });
       return;
     }
     await supabase.auth.signOut();
