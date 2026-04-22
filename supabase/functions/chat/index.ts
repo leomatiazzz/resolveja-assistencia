@@ -66,10 +66,16 @@ ${address
 - Antes de finalizar, pergunte UMA vez se há alguma observação ou aviso para o profissional (ex: cachorro no quintal, portão azul, melhor entrada). Se houver, passe em notes_for_professional. Se o usuário disser que não há nada, pode deixar vazio e seguir.`;
   }
   return `CONTEXTO DO USUÁRIO ATUAL:
-- O usuário NÃO está logado (anônimo).
-- IMPORTANTE: Antes de finalizar (antes de chamar register_service_request), quando já tiver coletado o problema, localização, urgência e horário, sugira de forma gentil que o usuário crie uma conta ou faça login para acompanhar o chamado, conversar com o profissional e avaliar o serviço depois. Diga algo como: "Para finalizar, recomendo que você crie uma conta ou faça login — assim você acompanha tudo em um só lugar. Quer fazer isso agora? Se preferir continuar sem conta, é só me dizer." 
-- Se o usuário aceitar, oriente-o a clicar em "Criar conta / Entrar" no rodapé do chat e diga que após o login ele pode retomar a solicitação.
-- Se o usuário recusar e quiser continuar sem conta, pergunte então o nome para contato e prossiga normalmente com register_service_request.`;
+- O usuário NÃO está logado (fluxo anônimo).
+- A criação de conta é 100% OPCIONAL. O usuário pode usar o serviço normalmente sem se cadastrar.
+- Você PODE, no máximo UMA vez durante a conversa, mencionar gentilmente que criar conta ou fazer login facilita acompanhar o chamado, conversar com o profissional e avaliar depois. Algo como: "Se quiser, você pode criar uma conta ou entrar para acompanhar tudo em um só lugar — mas é totalmente opcional, podemos seguir assim mesmo." 
+- Se o usuário demonstrar qualquer sinal de querer continuar sem conta (ou apenas testar o serviço), ACEITE IMEDIATAMENTE, sem insistir, sem repetir a sugestão e sem criar fricção. Não volte a tocar no assunto depois.
+- Como NÃO temos dados salvos no banco para este usuário, antes de chamar register_service_request você DEVE OBRIGATORIAMENTE coletar:
+  1. Endereço/localização COMPLETO do serviço (rua, número, bairro e cidade — não basta só o bairro).
+  2. Nome de contato.
+  3. Telefone de contato (se o usuário se sentir confortável em informar).
+  4. Perguntar explicitamente se há observações ou avisos relevantes para o profissional (ex: cachorro no quintal, portão azul, melhor entrada, horário restrito). Se houver, passe em notes_for_professional; se não houver, pode deixar vazio.
+- Só chame register_service_request depois que problema, categoria, endereço completo, urgência, horário, nome e a pergunta sobre observações estiverem cobertos.`;
 }
 
 serve(async (req) => {
