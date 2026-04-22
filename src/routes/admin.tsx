@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -66,6 +66,7 @@ type Professional = {
 };
 
 function AdminPage() {
+  const navigate = useNavigate();
   const [session, setSession] = useState<unknown>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [checking, setChecking] = useState(true);
@@ -99,7 +100,14 @@ function AdminPage() {
     setChecking(false);
   }
 
-  if (checking) {
+  useEffect(() => {
+    if (checking) return;
+    if (!session || !isAdmin) {
+      navigate({ to: "/login", search: { redirect: "/admin" } });
+    }
+  }, [checking, session, isAdmin, navigate]);
+
+  if (checking || !session || !isAdmin) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -107,205 +115,7 @@ function AdminPage() {
     );
   }
 
-  if (!session) return <LoginCard />;
-  if (!isAdmin) return <NoAccessCard />;
   return <Dashboard />;
-}
-
-function LoginCard() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [loading, setLoading] = useState(false);
-  const [resetMode, setResetMode] = useState(false);
-  const [resetLoading, setResetLoading] = useState(false);
-
-  async function handleReset(e: React.FormEvent) {
-    e.preventDefault();
-    if (!email) {
-      toast.error("Digite seu email para receber o link de recuperação.");
-      return;
-    }
-    setResetLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    if (error) toast.error(error.message);
-    else
-      toast.success(
-        "Email enviado! Verifique sua caixa de entrada para redefinir a senha.",
-      );
-    setResetLoading(false);
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (mode === "signup") {
-      if (password.length < 8) {
-        toast.error("A senha deve ter no mínimo 8 caracteres.");
-        return;
-      }
-      if (!/[A-Z]/.test(password)) {
-        toast.error("A senha deve conter ao menos uma letra maiúscula.");
-        return;
-      }
-      if (!/[^A-Za-z0-9]/.test(password)) {
-        toast.error("A senha deve conter ao menos um caractere especial.");
-        return;
-      }
-    }
-    setLoading(true);
-    if (mode === "signin") {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) toast.error(error.message);
-    } else {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: `${window.location.origin}/admin` },
-      });
-      if (error) toast.error(error.message);
-      else
-        toast.success(
-          "Conta criada! Confirme seu email e faça login para acessar o painel.",
-        );
-    }
-    setLoading(false);
-  }
-
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-[image:var(--gradient-soft)] px-4">
-      <Toaster richColors position="top-center" />
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-elegant)]">
-        <div className="mb-5 flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[image:var(--gradient-hero)] text-primary-foreground">
-            <Wrench className="h-5 w-5" />
-          </div>
-          <h1 className="text-lg font-bold text-foreground">Painel ResolveJá</h1>
-        </div>
-        {resetMode ? (
-          <form onSubmit={handleReset} className="space-y-3">
-            <p className="text-xs text-muted-foreground">
-              Informe seu email e enviaremos um link para redefinir a senha.
-            </p>
-            <div>
-              <Label htmlFor="reset-email">Email</Label>
-              <Input
-                id="reset-email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={resetLoading}>
-              {resetLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                "Enviar link de recuperação"
-              )}
-            </Button>
-            <button
-              type="button"
-              onClick={() => setResetMode(false)}
-              className="w-full text-center text-xs text-muted-foreground hover:text-foreground"
-            >
-              ← Voltar ao login
-            </button>
-          </form>
-        ) : (
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="password">Senha</Label>
-            <Input
-              id="password"
-              type="password"
-              required
-              minLength={mode === "signup" ? 8 : undefined}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            {mode === "signup" && (
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                Mínimo 8 caracteres, 1 maiúscula e 1 caractere especial.
-              </p>
-            )}
-          </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : mode === "signin" ? (
-              "Entrar"
-            ) : (
-              "Criar conta"
-            )}
-          </Button>
-          {mode === "signin" && (
-            <button
-              type="button"
-              onClick={() => setResetMode(true)}
-              className="w-full text-center text-xs text-primary hover:underline"
-            >
-              Esqueci minha senha
-            </button>
-          )}
-        </form>
-        )}
-        {!resetMode && (
-          <button
-            onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-            className="mt-3 w-full text-center text-xs text-muted-foreground hover:text-foreground"
-          >
-            {mode === "signin"
-              ? "Não tem conta? Criar uma"
-              : "Já tem conta? Entrar"}
-          </button>
-        )}
-        <Link
-          to="/"
-          className="mt-4 block text-center text-xs text-muted-foreground hover:text-foreground"
-        >
-          ← Voltar ao chat
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-function NoAccessCard() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-[image:var(--gradient-soft)] px-4">
-      <Toaster richColors position="top-center" />
-      <div className="max-w-md rounded-2xl border border-border bg-card p-6 text-center shadow-[var(--shadow-elegant)]">
-        <h2 className="text-lg font-bold text-foreground">Sem acesso</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Sua conta não tem permissão de administrador. Peça a um admin para
-          adicionar a role <code className="font-mono">admin</code> ao seu
-          usuário na tabela <code className="font-mono">user_roles</code>.
-        </p>
-        <Button
-          variant="outline"
-          className="mt-4"
-          onClick={() => supabase.auth.signOut()}
-        >
-          <LogOut className="mr-2 h-4 w-4" /> Sair
-        </Button>
-      </div>
-    </div>
-  );
 }
 
 function Dashboard() {
