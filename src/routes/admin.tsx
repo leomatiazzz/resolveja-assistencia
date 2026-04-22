@@ -66,6 +66,7 @@ type Professional = {
 };
 
 function AdminPage() {
+  const navigate = useNavigate();
   const [session, setSession] = useState<unknown>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [checking, setChecking] = useState(true);
@@ -99,7 +100,14 @@ function AdminPage() {
     setChecking(false);
   }
 
-  if (checking) {
+  useEffect(() => {
+    if (checking) return;
+    if (!session || !isAdmin) {
+      navigate({ to: "/login", search: { redirect: "/admin" } });
+    }
+  }, [checking, session, isAdmin, navigate]);
+
+  if (checking || !session || !isAdmin) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -107,8 +115,6 @@ function AdminPage() {
     );
   }
 
-  if (!session) return <LoginCard />;
-  if (!isAdmin) return <NoAccessCard />;
   return <Dashboard />;
 }
 
