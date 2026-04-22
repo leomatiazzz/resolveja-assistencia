@@ -138,6 +138,9 @@ function MinhaContaPage() {
             <TabsTrigger value="addresses">
               <MapPin className="mr-1.5 h-3.5 w-3.5" /> Endereços
             </TabsTrigger>
+            <TabsTrigger value="settings">
+              <Settings className="mr-1.5 h-3.5 w-3.5" /> Configurações
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="requests">
@@ -171,6 +174,10 @@ function MinhaContaPage() {
 
           <TabsContent value="addresses">
             <AddressManager />
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <SettingsPanel />
           </TabsContent>
         </Tabs>
       </main>
