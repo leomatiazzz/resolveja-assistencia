@@ -113,7 +113,7 @@ function Index() {
 
       <footer className="mx-auto max-w-6xl px-5 py-6">
         <div className="flex flex-col items-center justify-between gap-2 border-t border-border pt-4 text-xs text-muted-foreground sm:flex-row">
-          <span>© {new Date().getFullYear()} ResolveJá. Todos os direitos reservados.</span>
+          <span>© {new Date().getFullYear()} ResolveJá. Feito por Léo Matias. Todos os direitos reservados.</span>
           <Link
             to="/admin"
             className="text-muted-foreground/70 hover:text-foreground"
